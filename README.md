@@ -34,7 +34,7 @@ Abrir http://localhost:3000 → **Systronia** → cambio de contraseña obligato
 
 ## Staging (Coolify)
 
-**https://sygos3-0.vector-ia.mx**
+**https://sygos3-0.systronia.com** · login: `/login`
 
 Tras provisionar, configura en Coolify las variables de [web/coolify.md](./web/coolify.md) y redeploy.
 

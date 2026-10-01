@@ -2,7 +2,8 @@
 
 | Campo | Valor |
 |-------|--------|
-| **URL** | https://sygos3-0.vector-ia.mx |
+| **URL** | https://sygos3-0.systronia.com |
+| **Login** | https://sygos3-0.systronia.com/login |
 | **App UUID** | `fwvckhghsttencoftqwjn4am` |
 | **PostgreSQL UUID** | `t6edawwtycbgxrkmwuob7vj0` |
 | **Base directory** | `/web` |
