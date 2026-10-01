@@ -7,5 +7,9 @@ if [ -n "${DATABASE_URL:-}" ]; then
     echo "[sygos] Seed Super Admin (si no existe)…"
     npm run db:seed || true
   fi
+  if [ -n "${FIX_SYSTRONIA_PASSWORD:-}" ]; then
+    echo "[sygos] Restableciendo contraseña de Systronia (una vez)…"
+    NEW_ADMIN_PASSWORD="${FIX_SYSTRONIA_PASSWORD}" npm run db:reset-systronia || true
+  fi
 fi
 exec "$@"
