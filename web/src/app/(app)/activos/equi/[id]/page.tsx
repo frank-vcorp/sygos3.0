@@ -1,0 +1,71 @@
+import Link from "next/link";
+import { notFound, redirect } from "next/navigation";
+import { MovementActions } from "@/components/assets/asset-forms";
+import type { CompanySlug } from "@/lib/company";
+import { getEquiDetail } from "@/server/assets/equi";
+import { listPhysicalMovements } from "@/server/assets/custody";
+import { getAuthContext } from "@/server/auth/session";
+import { canOperateSystronWarehouse, canSeeEqui } from "@/server/rbac/assets";
+
+export const dynamic = "force-dynamic";
+
+type Props = { params: Promise<{ id: string }> };
+
+export default async function EquiDetailPage({ params }: Props) {
+  const auth = await getAuthContext();
+  if (!auth) redirect("/login");
+  const slug = auth.activeCompany.slug as CompanySlug;
+  if (!canSeeEqui(auth.effective.role, slug)) redirect("/inicio");
+
+  const { id } = await params;
+  const detail = await getEquiDetail(auth.activeCompany.id, id);
+  if (!detail) notFound();
+
+  const movements = await listPhysicalMovements({
+    companyId: auth.activeCompany.id,
+    entityType: "EQUI",
+    entityId: id,
+  });
+
+  const canMove = canOperateSystronWarehouse(auth.effective.role, slug);
+
+  return (
+    <div className="mx-auto max-w-3xl space-y-6">
+      <Link href="/activos/equi" className="text-sm text-sky-800 hover:underline">
+        ← EQUI
+      </Link>
+      <div>
+        <h1 className="text-2xl font-semibold">{detail.folio}</h1>
+        <p className="text-sm text-slate-600">
+          {detail.clientName} · {detail.typeName} · {detail.brandName} · {detail.equi.model}
+        </p>
+        <p className="text-sm text-slate-500">Custodia: {detail.equi.custodyStatus}</p>
+      </div>
+      {canMove && (
+        <MovementActions
+          entityKind="equi"
+          entityId={id}
+          allowedTypes={[
+            { value: "ENTRY", label: "Entrada almacén" },
+            { value: "EXIT", label: "Salida" },
+            { value: "TRIAL_OUT", label: "Salida a prueba" },
+            { value: "TRIAL_RETURN", label: "Retorno de prueba" },
+            { value: "DEFINITIVE_EXIT", label: "Salida definitiva" },
+          ]}
+        />
+      )}
+      <section className="rounded-xl border bg-white p-4">
+        <h2 className="text-sm font-semibold">Historial físico</h2>
+        <ul className="mt-3 divide-y text-sm">
+          {movements.length === 0 && <li className="py-2 text-slate-500">Sin movimientos.</li>}
+          {movements.map((m) => (
+            <li key={m.id} className="py-2">
+              {m.movementType} · {m.motive ?? "—"} ·{" "}
+              {new Date(m.occurredAt).toLocaleString("es-MX")}
+            </li>
+          ))}
+        </ul>
+      </section>
+    </div>
+  );
+}

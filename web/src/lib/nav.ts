@@ -20,9 +20,9 @@ export const appNavSections: NavSection[] = [
   {
     title: "Activos",
     items: [
-      { label: "Equipos EQUI", href: "/inicio" },
-      { label: "Motores MOT", href: "/inicio" },
-      { label: "Almacén", href: "/inicio" },
+      { label: "Equipos EQUI", href: "/activos/equi" },
+      { label: "Motores MOT", href: "/activos/mot" },
+      { label: "Almacén", href: "/activos/almacen" },
     ],
   },
   {
@@ -30,7 +30,8 @@ export const appNavSections: NavSection[] = [
     items: [
       { label: "Operación técnica", href: "/inicio" },
       { label: "Cotizaciones", href: "/inicio" },
-      { label: "Inventario", href: "/inicio" },
+      { label: "Inventario", href: "/operacion/inventario" },
+      { label: "Refacciones", href: "/operacion/refacciones" },
       { label: "Compras y O.C.", href: "/inicio" },
       { label: "Proveedores", href: "/operacion/proveedores" },
     ],

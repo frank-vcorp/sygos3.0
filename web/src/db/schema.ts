@@ -304,6 +304,309 @@ export const folioSequences = pgTable(
   ],
 );
 
+export const globalFolioSequences = pgTable("global_folio_sequences", {
+  folioType: text("folio_type").primaryKey(),
+  lastValue: integer("last_value").default(0).notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const equiCustodyStatusEnum = pgEnum("equi_custody_status", [
+  "AWAITING_ENTRY",
+  "IN_CUSTODY",
+  "OUT",
+  "TRIAL_OUT",
+]);
+
+export const motorOriginEnum = pgEnum("motor_origin", [
+  "SYSTRON",
+  "SERVOMOTORES_DIRECT",
+]);
+
+export const servomotoresIntakeStatusEnum = pgEnum("servomotores_intake_status", [
+  "NOT_APPLICABLE",
+  "PENDING_INTAKE",
+  "IN_CUSTODY",
+  "OUT",
+  "TRIAL_OUT",
+]);
+
+export const physicalMovementTypeEnum = pgEnum("physical_movement_type", [
+  "ENTRY",
+  "EXIT",
+  "TRIAL_OUT",
+  "TRIAL_RETURN",
+  "DEFINITIVE_EXIT",
+  "INGRESO",
+  "EGRESO",
+]);
+
+export const physicalEntityTypeEnum = pgEnum("physical_entity_type", [
+  "EQUI",
+  "MOT",
+]);
+
+export const workOrderStatusEnum = pgEnum("work_order_status", [
+  "OPEN",
+  "CLOSED",
+]);
+
+export const sparePartRequestStatusEnum = pgEnum("spare_part_request_status", [
+  "SOLICITADA",
+  "EN_TRANSITO",
+  "EN_ALMACEN",
+  "SURTIDA",
+]);
+
+export const inventoryMovementKindEnum = pgEnum("inventory_movement_kind", [
+  "RECEIPT",
+  "ISSUE",
+  "ADJUSTMENT",
+  "IMPORT",
+]);
+
+export const equipmentTypes = pgTable(
+  "equipment_types",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    companyId: uuid("company_id")
+      .notNull()
+      .references(() => companies.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    isActive: boolean("is_active").default(true).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("equipment_types_company_name_unique").on(
+      t.companyId,
+      t.name,
+    ),
+  ],
+);
+
+export const equipmentBrands = pgTable(
+  "equipment_brands",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    companyId: uuid("company_id")
+      .notNull()
+      .references(() => companies.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    isActive: boolean("is_active").default(true).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("equipment_brands_company_name_unique").on(
+      t.companyId,
+      t.name,
+    ),
+  ],
+);
+
+export const equiUnits = pgTable(
+  "equi_units",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    companyId: uuid("company_id")
+      .notNull()
+      .references(() => companies.id, { onDelete: "cascade" }),
+    clientId: uuid("client_id")
+      .notNull()
+      .references(() => clients.id),
+    folioNumber: integer("folio_number").notNull(),
+    typeId: uuid("type_id")
+      .notNull()
+      .references(() => equipmentTypes.id),
+    brandId: uuid("brand_id")
+      .notNull()
+      .references(() => equipmentBrands.id),
+    model: text("model").notNull(),
+    description: text("description"),
+    serialNumber: text("serial_number"),
+    custodyStatus: equiCustodyStatusEnum("custody_status")
+      .default("AWAITING_ENTRY")
+      .notNull(),
+    createdByActorUserId: uuid("created_by_actor_user_id")
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("equi_units_company_folio_unique").on(
+      t.companyId,
+      t.folioNumber,
+    ),
+  ],
+);
+
+export const motors = pgTable("motors", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  folioNumber: integer("folio_number").notNull().unique(),
+  origin: motorOriginEnum("origin").notNull(),
+  originCompanyId: uuid("origin_company_id")
+    .notNull()
+    .references(() => companies.id),
+  clientId: uuid("client_id")
+    .notNull()
+    .references(() => clients.id),
+  identification: text("identification").notNull(),
+  brand: text("brand"),
+  model: text("model"),
+  serialNumber: text("serial_number"),
+  notes: text("notes"),
+  servomotoresIntakeStatus: servomotoresIntakeStatusEnum(
+    "servomotores_intake_status",
+  )
+    .default("NOT_APPLICABLE")
+    .notNull(),
+  createdByActorUserId: uuid("created_by_actor_user_id")
+    .notNull()
+    .references(() => users.id),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const physicalMovements = pgTable("physical_movements", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  companyId: uuid("company_id")
+    .notNull()
+    .references(() => companies.id, { onDelete: "cascade" }),
+  entityType: physicalEntityTypeEnum("entity_type").notNull(),
+  entityId: uuid("entity_id").notNull(),
+  movementType: physicalMovementTypeEnum("movement_type").notNull(),
+  motive: text("motive"),
+  receiverName: text("receiver_name"),
+  receiverNotes: text("receiver_notes"),
+  enablingDocumentRef: text("enabling_document_ref"),
+  performedByActorUserId: uuid("performed_by_actor_user_id")
+    .notNull()
+    .references(() => users.id),
+  occurredAt: timestamp("occurred_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const workOrders = pgTable(
+  "work_orders",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    companyId: uuid("company_id")
+      .notNull()
+      .references(() => companies.id, { onDelete: "cascade" }),
+    folioNumber: integer("folio_number").notNull(),
+    equiId: uuid("equi_id").references(() => equiUnits.id),
+    motorId: uuid("motor_id").references(() => motors.id),
+    status: workOrderStatusEnum("status").default("OPEN").notNull(),
+    summary: text("summary"),
+    createdByActorUserId: uuid("created_by_actor_user_id")
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("work_orders_company_folio_unique").on(
+      t.companyId,
+      t.folioNumber,
+    ),
+  ],
+);
+
+export const inventoryParts = pgTable(
+  "inventory_parts",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    companyId: uuid("company_id")
+      .notNull()
+      .references(() => companies.id, { onDelete: "cascade" }),
+    partNumber: text("part_number").notNull(),
+    description: text("description").notNull(),
+    quantityOnHand: integer("quantity_on_hand").default(0).notNull(),
+    minQty: integer("min_qty"),
+    maxQty: integer("max_qty"),
+    isActive: boolean("is_active").default(true).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("inventory_parts_company_part_unique").on(
+      t.companyId,
+      t.partNumber,
+    ),
+  ],
+);
+
+export const inventoryMovements = pgTable("inventory_movements", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  companyId: uuid("company_id")
+    .notNull()
+    .references(() => companies.id, { onDelete: "cascade" }),
+  partId: uuid("part_id")
+    .notNull()
+    .references(() => inventoryParts.id, { onDelete: "cascade" }),
+  kind: inventoryMovementKindEnum("kind").notNull(),
+  quantityDelta: integer("quantity_delta").notNull(),
+  reference: text("reference"),
+  performedByActorUserId: uuid("performed_by_actor_user_id")
+    .notNull()
+    .references(() => users.id),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const sparePartRequests = pgTable("spare_part_requests", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  companyId: uuid("company_id")
+    .notNull()
+    .references(() => companies.id, { onDelete: "cascade" }),
+  workOrderId: uuid("work_order_id")
+    .notNull()
+    .references(() => workOrders.id, { onDelete: "cascade" }),
+  partNumber: text("part_number").notNull(),
+  description: text("description").notNull(),
+  linkUrl: text("link_url"),
+  quantityRequested: integer("quantity_requested").notNull(),
+  quantityFulfilled: integer("quantity_fulfilled").default(0).notNull(),
+  status: sparePartRequestStatusEnum("status")
+    .default("SOLICITADA")
+    .notNull(),
+  createdByActorUserId: uuid("created_by_actor_user_id")
+    .notNull()
+    .references(() => users.id),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
 export type UserRole = (typeof userRoleEnum.enumValues)[number];
 export type IntegrationProvider =
   (typeof integrationProviderEnum.enumValues)[number];

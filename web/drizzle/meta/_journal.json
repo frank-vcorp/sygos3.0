@@ -22,6 +22,13 @@
       "when": 1790898395711,
       "tag": "0002_nostalgic_raider",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790898591695,
+      "tag": "0003_free_randall_flagg",
+      "breakpoints": true
     }
   ]
 }

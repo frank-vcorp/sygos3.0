@@ -24,7 +24,13 @@ export function canSeeNavSection(
   }
   if (section === "config") return false;
   if (role === "VENTAS_SYSTRON") {
-    return section === "comercial";
+    return section === "comercial" || section === "activos";
+  }
+  if (role === "GERENTE_OPERATIVO_SYSTRON") {
+    return section === "operacion" || section === "activos";
+  }
+  if (role === "GERENTE_OPERATIVO_SERVOMOTORES") {
+    return section === "comercial" || section === "activos" || section === "operacion";
   }
   if (role === "TECNICO_SYSTRON" || role === "SUPERVISOR_TECNICO_SYSTRON") {
     return section === "operacion" || section === "activos";

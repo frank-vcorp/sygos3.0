@@ -16,6 +16,8 @@ const typeLabels: Record<string, string> = {
   client: "Cliente",
   prospect: "Prospecto",
   supplier: "Proveedor",
+  equi: "EQUI",
+  motor: "MOT",
 };
 
 export function GlobalSearch({ enabled }: { enabled: boolean }) {
@@ -63,7 +65,7 @@ export function GlobalSearch({ enabled }: { enabled: boolean }) {
         onFocus={() => hits.length > 0 && setOpen(true)}
         placeholder={
           enabled
-            ? "Buscar clientes, prospectos, proveedores…"
+            ? "Buscar clientes, EQUI, MOT, folio…"
             : "Búsqueda global (CEO/Admin)"
         }
         disabled={!enabled}
