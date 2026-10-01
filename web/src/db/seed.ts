@@ -5,6 +5,7 @@ import {
   userCompanyAccess,
   users,
 } from "./schema";
+import { ensureSystronServomotoresSupplier } from "@/server/masters/suppliers";
 import { hashPassword } from "@/server/auth/password";
 
 async function main() {
@@ -65,8 +66,16 @@ async function main() {
     }
 
     console.log("Usuario Super Admin Systronia creado (must_change_password=true).");
+    await ensureSystronServomotoresSupplier({
+      systronCompanyId: systron.id,
+      actorUserId: inserted.id,
+    });
   } else {
     console.log("Seed omitido: Systronia ya existe.");
+    await ensureSystronServomotoresSupplier({
+      systronCompanyId: systron.id,
+      actorUserId: existingUser.id,
+    });
   }
 }
 

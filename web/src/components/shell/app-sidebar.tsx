@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Home, Settings } from "lucide-react";
 import { SygosLogo } from "@/components/brand/sygos-logo";
 import { appNavSections } from "@/lib/nav";
@@ -23,8 +26,21 @@ export function AppSidebar({
   activeCompany,
   effectiveRole,
   showConfigIntegrations,
-  activePath = "/inicio",
+  activePath: activePathProp,
 }: AppSidebarProps) {
+  const pathname = usePathname();
+  const activePath = activePathProp ?? pathname;
+
+  function linkClass(href: string) {
+    const active =
+      href === "/inicio"
+        ? activePath === "/inicio"
+        : activePath === href || activePath.startsWith(`${href}/`);
+    return active
+      ? "block rounded-lg px-3 py-2 text-sm bg-white/10 text-white"
+      : "block rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-white/5 hover:text-white";
+  }
+
   return (
     <aside className="flex w-60 shrink-0 flex-col bg-sygos-navy-sidebar text-slate-200">
       <div className="border-b border-white/10 px-4 py-5">
@@ -35,11 +51,7 @@ export function AppSidebar({
       <nav className="flex-1 overflow-y-auto px-2 py-4">
         <Link
           href="/inicio"
-          className={`mb-4 flex items-center gap-2 rounded-lg px-3 py-2 text-sm ${
-            activePath === "/inicio"
-              ? "bg-white/10 text-white"
-              : "text-slate-300 hover:bg-white/5"
-          }`}
+          className={`mb-4 flex items-center gap-2 ${linkClass("/inicio")}`}
         >
           <Home className="h-4 w-4" />
           Inicio
@@ -56,10 +68,7 @@ export function AppSidebar({
               <ul className="space-y-0.5">
                 {section.items.map((item) => (
                   <li key={item.label}>
-                    <Link
-                      href={item.href}
-                      className="block rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-white/5 hover:text-white"
-                    >
+                    <Link href={item.href} className={linkClass(item.href)}>
                       {item.label}
                     </Link>
                   </li>
@@ -76,7 +85,7 @@ export function AppSidebar({
             </p>
             <Link
               href="/configuracion/integraciones"
-              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-white/5 hover:text-white"
+              className={`flex items-center gap-2 ${linkClass("/configuracion/integraciones")}`}
             >
               <Settings className="h-4 w-4" />
               Integraciones

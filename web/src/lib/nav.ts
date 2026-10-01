@@ -13,8 +13,8 @@ export const appNavSections: NavSection[] = [
   {
     title: "Comercial",
     items: [
-      { label: "Clientes", href: "/inicio" },
-      { label: "Prospectos", href: "/inicio" },
+      { label: "Clientes", href: "/comercial/clientes" },
+      { label: "Prospectos", href: "/comercial/prospectos" },
     ],
   },
   {
@@ -32,7 +32,7 @@ export const appNavSections: NavSection[] = [
       { label: "Cotizaciones", href: "/inicio" },
       { label: "Inventario", href: "/inicio" },
       { label: "Compras y O.C.", href: "/inicio" },
-      { label: "Proveedores", href: "/inicio" },
+      { label: "Proveedores", href: "/operacion/proveedores" },
     ],
   },
   {
