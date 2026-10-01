@@ -8,6 +8,8 @@ services:
     environment:
       DATABASE_URL: postgresql://sygos:sygos@postgres:5432/sygos
       REDIS_URL: redis://redis:6379
+      ENCRYPTION_KEY: dev-local-encryption-key-32chars!!
+      ADMIN_INITIAL_PASSWORD: ${ADMIN_INITIAL_PASSWORD:-}
     volumes:
       - sygos_files:/data/files
     depends_on:
@@ -16,6 +18,8 @@ services:
 
   postgres:
     image: postgres:16-alpine
+    ports:
+      - "5432:5432"
     environment:
       POSTGRES_USER: sygos
       POSTGRES_PASSWORD: sygos

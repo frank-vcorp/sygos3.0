@@ -16,12 +16,17 @@ ERP operativo multiempresa (SYSTRON / Servomotores).
 ## Desarrollo local
 
 ```bash
+docker compose up -d postgres redis
 cd web
+cp .env.example .env.local
+# Editar .env.local: ENCRYPTION_KEY (32+ chars) y ADMIN_INITIAL_PASSWORD para seed
 npm install
+npm run db:migrate
+npm run db:seed
 npm run dev
 ```
 
-Abrir http://localhost:3000 → login → `/inicio` (shell Fase 1).
+Abrir http://localhost:3000 → **Systronia** → cambio de contraseña obligatorio → `/inicio`.
 
 ## Scaffolding vs producto
 

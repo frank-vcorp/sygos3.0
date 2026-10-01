@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { ArrowRight, Building2, CheckCircle2, ShieldCheck } from "lucide-react";
+import { Building2, CheckCircle2, ShieldCheck } from "lucide-react";
+import { LoginForm } from "@/components/auth/login-form";
 import { SygosLogo } from "@/components/brand/sygos-logo";
 
 export default function LoginPage() {
@@ -48,46 +49,7 @@ export default function LoginPage() {
             Accede a tu espacio de trabajo operativo.
           </p>
 
-          <form action="/inicio" method="get" className="mt-8 space-y-5">
-            <div>
-              <label
-                htmlFor="usuario"
-                className="mb-1.5 block text-sm font-medium text-slate-700"
-              >
-                Usuario
-              </label>
-              <input
-                id="usuario"
-                name="usuario"
-                type="text"
-                autoComplete="username"
-                placeholder="Systronia"
-                className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none ring-sygos-teal/30 focus:border-sygos-teal focus:ring-2"
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="password"
-                className="mb-1.5 block text-sm font-medium text-slate-700"
-              >
-                Contraseña
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none ring-sygos-teal/30 focus:border-sygos-teal focus:ring-2"
-              />
-            </div>
-            <button
-              type="submit"
-              className="flex w-full items-center justify-center gap-2 rounded-lg bg-sygos-navy px-4 py-2.5 text-sm font-medium text-white transition hover:bg-sygos-navy-sidebar"
-            >
-              Entrar al sistema
-              <ArrowRight className="h-4 w-4" />
-            </button>
-          </form>
+          <LoginForm />
 
           <p className="mt-6 text-center text-xs text-slate-400">
             <Link href="/login" className="hover:text-sygos-teal">

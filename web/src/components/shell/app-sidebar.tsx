@@ -1,21 +1,34 @@
 import Link from "next/link";
-import { Home } from "lucide-react";
+import { Home, Settings } from "lucide-react";
 import { SygosLogo } from "@/components/brand/sygos-logo";
-import { appNavSections, type ActiveCompany } from "@/lib/nav";
+import { appNavSections } from "@/lib/nav";
+import type { UserRole } from "@/db/schema";
+import { canSeeNavSection } from "@/server/rbac/roles";
 
 type AppSidebarProps = {
-  activeCompany: ActiveCompany;
+  activeCompany: string;
+  effectiveRole: UserRole;
+  showConfigIntegrations: boolean;
   activePath?: string;
+};
+
+const sectionKey: Record<string, "comercial" | "activos" | "operacion" | "administracion"> = {
+  Comercial: "comercial",
+  Activos: "activos",
+  Operación: "operacion",
+  Administración: "administracion",
 };
 
 export function AppSidebar({
   activeCompany,
+  effectiveRole,
+  showConfigIntegrations,
   activePath = "/inicio",
 }: AppSidebarProps) {
   return (
     <aside className="flex w-60 shrink-0 flex-col bg-sygos-navy-sidebar text-slate-200">
       <div className="border-b border-white/10 px-4 py-5">
-        <SygosLogo variant="light" className="scale-90 origin-left" />
+        <SygosLogo variant="light" className="origin-left scale-90" />
         <p className="mt-1 text-[10px] text-slate-400">Monitoreo inteligente</p>
       </div>
 
@@ -32,25 +45,44 @@ export function AppSidebar({
           Inicio
         </Link>
 
-        {appNavSections.map((section) => (
-          <div key={section.title} className="mb-5">
+        {appNavSections.map((section) => {
+          const key = sectionKey[section.title];
+          if (key && !canSeeNavSection(effectiveRole, key)) return null;
+          return (
+            <div key={section.title} className="mb-5">
+              <p className="mb-2 px-3 text-[10px] font-semibold tracking-wider text-slate-500">
+                {section.title.toUpperCase()}
+              </p>
+              <ul className="space-y-0.5">
+                {section.items.map((item) => (
+                  <li key={item.label}>
+                    <Link
+                      href={item.href}
+                      className="block rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-white/5 hover:text-white"
+                    >
+                      {item.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          );
+        })}
+
+        {showConfigIntegrations && (
+          <div className="mb-5">
             <p className="mb-2 px-3 text-[10px] font-semibold tracking-wider text-slate-500">
-              {section.title.toUpperCase()}
+              SISTEMA
             </p>
-            <ul className="space-y-0.5">
-              {section.items.map((item) => (
-                <li key={item.label}>
-                  <Link
-                    href={item.href}
-                    className="block rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-white/5 hover:text-white"
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            <Link
+              href="/configuracion/integraciones"
+              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-white/5 hover:text-white"
+            >
+              <Settings className="h-4 w-4" />
+              Integraciones
+            </Link>
           </div>
-        ))}
+        )}
       </nav>
 
       <div className="border-t border-white/10 p-4">

@@ -1,9 +1,7 @@
 import Link from "next/link";
 import { AlertTriangle, Info } from "lucide-react";
-import type { ActiveCompany } from "@/lib/nav";
-
 type ContextBannersProps = {
-  activeCompany: ActiveCompany;
+  activeCompany: string;
   missingIntegrations?: string[];
 };
 
@@ -26,10 +24,13 @@ export function ContextBanners({
           <p>
             Integraciones sin configurar en esta empresa:{" "}
             <strong>{missingIntegrations.join(", ")}</strong>.{" "}
-            <Link href="/inicio" className="font-medium underline underline-offset-2">
+            <Link
+              href="/configuracion/integraciones"
+              className="font-medium underline underline-offset-2"
+            >
               Revisar integraciones
-            </Link>{" "}
-            (Configuración — próximamente).
+            </Link>
+            .
           </p>
         </div>
       )}

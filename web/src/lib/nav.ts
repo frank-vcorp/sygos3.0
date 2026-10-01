@@ -44,4 +44,5 @@ export const appNavSections: NavSection[] = [
   },
 ];
 
+/** @deprecated usar CompanySlug en lib/company */
 export type ActiveCompany = "SYSTRON" | "Servomotores";
