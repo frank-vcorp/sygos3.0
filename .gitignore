@@ -1,0 +1,12 @@
+node_modules/
+web/node_modules/
+web/.next/
+web/out/
+.env
+.env.*
+!.env.example
+web/.env
+web/.env.*
+!web/.env.example
+*.log
+.DS_Store

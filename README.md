@@ -1,0 +1,30 @@
+# SYGOS 3.0
+
+ERP operativo multiempresa (SYSTRON / Servomotores).
+
+- **Fuente funcional:** [SYGOS_3.0_DISCOVERY_FUNCIONAL_VALIDADO.md](./SYGOS_3.0_DISCOVERY_FUNCIONAL_VALIDADO.md)
+- **Repositorio:** https://github.com/frank-vcorp/sygos3.0
+
+## Estructura
+
+| Ruta | Descripción |
+|------|-------------|
+| `web/` | Aplicación Next.js (UI + API en evolución) |
+| `Marca/` | Activos de marca |
+| `docker-compose.yml` | Postgres, Redis, app (desarrollo / referencia Coolify) |
+
+## Desarrollo local
+
+```bash
+cd web
+npm install
+npm run dev
+```
+
+Abrir http://localhost:3000 → login → `/inicio` (shell Fase 1).
+
+## Scaffolding vs producto
+
+**Scaffolding** = armazón inicial: proyecto, Docker, login y shell según mockups, sin módulos de negocio completos ni auth real.
+
+Próximos pasos: PostgreSQL, auth Systronia, RBAC, Configuración, maestros Fase 1.

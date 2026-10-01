@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+:root {
+  --sygos-navy: #0f2940;
+  --sygos-navy-sidebar: #1e293b;
+  --sygos-teal: #2a9d8f;
+  --sygos-teal-light: #5ebfb5;
+  --background: #f4f7fb;
+  --foreground: #0f172a;
+  --card: #ffffff;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-sygos-navy: var(--sygos-navy);
+  --color-sygos-navy-sidebar: var(--sygos-navy-sidebar);
+  --color-sygos-teal: var(--sygos-teal);
+  --color-sygos-teal-light: var(--sygos-teal-light);
+  --color-sygos-card: var(--card);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}

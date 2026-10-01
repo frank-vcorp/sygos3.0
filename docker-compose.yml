@@ -1,0 +1,31 @@
+services:
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://sygos:sygos@postgres:5432/sygos
+      REDIS_URL: redis://redis:6379
+    volumes:
+      - sygos_files:/data/files
+    depends_on:
+      - postgres
+      - redis
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: sygos
+      POSTGRES_PASSWORD: sygos
+      POSTGRES_DB: sygos
+    volumes:
+      - sygos_pg:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+
+volumes:
+  sygos_pg:
+  sygos_files:
