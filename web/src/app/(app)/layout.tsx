@@ -14,6 +14,7 @@ import {
   canUseViewAs,
   roleLabel,
 } from "@/server/rbac/roles";
+import { canGlobalSearch, canManageCompanySettings, canManageUsers } from "@/server/rbac/users-admin";
 
 export const dynamic = "force-dynamic";
 
@@ -55,6 +56,12 @@ export default async function AppLayout({
         showConfigIntegrations={
           canManageIntegrations(auth.actor.role) && !auth.viewAsActive
         }
+        showConfigGeneral={
+          canManageCompanySettings(auth.actor.role) && !auth.viewAsActive
+        }
+        showConfigUsers={
+          canManageUsers(auth.actor.role) && !auth.viewAsActive
+        }
       />
       <div className="flex min-w-0 flex-1 flex-col">
         <AppHeader
@@ -66,6 +73,7 @@ export default async function AppLayout({
           viewAsEnabled={canUseViewAs(auth.actor.role)}
           viewAsActive={auth.viewAsActive}
           viewAsLabel={viewAsLabel}
+          globalSearchEnabled={canGlobalSearch(auth.effective.role)}
         />
         {auth.viewAsActive && (
           <ViewAsBanner

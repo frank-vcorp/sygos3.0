@@ -38,6 +38,35 @@ export const companies = pgTable("companies", {
     .notNull(),
 });
 
+export const companySettings = pgTable("company_settings", {
+  companyId: uuid("company_id")
+    .primaryKey()
+    .references(() => companies.id, { onDelete: "cascade" }),
+  tradeName: text("trade_name"),
+  taxLegalName: text("tax_legal_name"),
+  taxRfc: text("tax_rfc"),
+  taxRegime: text("tax_regime"),
+  taxZip: text("tax_zip"),
+  address: text("address"),
+  contactEmail: text("contact_email"),
+  contactPhone: text("contact_phone"),
+  logoUrl: text("logo_url"),
+  directPurchaseMonthlyLimitMxn: integer("direct_purchase_monthly_limit_mxn")
+    .default(5000)
+    .notNull(),
+  directPurchaseIndividualLimitMxn: integer(
+    "direct_purchase_individual_limit_mxn",
+  )
+    .default(2000)
+    .notNull(),
+  servomotoresInventoryEnabled: boolean("servomotores_inventory_enabled")
+    .default(false)
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
 export const users = pgTable(
   "users",
   {
@@ -48,6 +77,7 @@ export const users = pgTable(
     role: userRoleEnum("role").notNull(),
     homeCompanyId: uuid("home_company_id").references(() => companies.id),
     mustChangePassword: boolean("must_change_password").default(false).notNull(),
+    vendorDiscountLimitPct: integer("vendor_discount_limit_pct"),
     isActive: boolean("is_active").default(true).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()

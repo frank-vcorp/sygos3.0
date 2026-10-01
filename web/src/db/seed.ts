@@ -5,6 +5,7 @@ import {
   userCompanyAccess,
   users,
 } from "./schema";
+import { ensureCompanySettings } from "@/server/config/company-settings";
 import { ensureSystronServomotoresSupplier } from "@/server/masters/suppliers";
 import { hashPassword } from "@/server/auth/password";
 
@@ -35,6 +36,9 @@ async function main() {
   }
 
   const allCompanies = await db.select().from(companies);
+  for (const company of allCompanies) {
+    await ensureCompanySettings(company.id);
+  }
   const systron = allCompanies.find((c) => c.slug === "SYSTRON")!;
   const servomotores = allCompanies.find((c) => c.slug === "SERVOMOTORES")!;
 

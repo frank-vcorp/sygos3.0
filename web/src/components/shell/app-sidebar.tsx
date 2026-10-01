@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Settings } from "lucide-react";
+import { Home, Settings, SlidersHorizontal, Users } from "lucide-react";
 import { SygosLogo } from "@/components/brand/sygos-logo";
 import { appNavSections } from "@/lib/nav";
 import type { UserRole } from "@/db/schema";
@@ -12,6 +12,8 @@ type AppSidebarProps = {
   activeCompany: string;
   effectiveRole: UserRole;
   showConfigIntegrations: boolean;
+  showConfigGeneral: boolean;
+  showConfigUsers: boolean;
   activePath?: string;
 };
 
@@ -26,8 +28,11 @@ export function AppSidebar({
   activeCompany,
   effectiveRole,
   showConfigIntegrations,
+  showConfigGeneral,
+  showConfigUsers,
   activePath: activePathProp,
 }: AppSidebarProps) {
+  const showSystem = showConfigGeneral || showConfigUsers || showConfigIntegrations;
   const pathname = usePathname();
   const activePath = activePathProp ?? pathname;
 
@@ -78,18 +83,46 @@ export function AppSidebar({
           );
         })}
 
-        {showConfigIntegrations && (
+        {showSystem && (
           <div className="mb-5">
             <p className="mb-2 px-3 text-[10px] font-semibold tracking-wider text-slate-500">
               SISTEMA
             </p>
-            <Link
-              href="/configuracion/integraciones"
-              className={`flex items-center gap-2 ${linkClass("/configuracion/integraciones")}`}
-            >
-              <Settings className="h-4 w-4" />
-              Integraciones
-            </Link>
+            <ul className="space-y-0.5">
+              {showConfigGeneral && (
+                <li>
+                  <Link
+                    href="/configuracion/general"
+                    className={`flex items-center gap-2 ${linkClass("/configuracion/general")}`}
+                  >
+                    <SlidersHorizontal className="h-4 w-4" />
+                    General
+                  </Link>
+                </li>
+              )}
+              {showConfigUsers && (
+                <li>
+                  <Link
+                    href="/configuracion/usuarios"
+                    className={`flex items-center gap-2 ${linkClass("/configuracion/usuarios")}`}
+                  >
+                    <Users className="h-4 w-4" />
+                    Usuarios
+                  </Link>
+                </li>
+              )}
+              {showConfigIntegrations && (
+                <li>
+                  <Link
+                    href="/configuracion/integraciones"
+                    className={`flex items-center gap-2 ${linkClass("/configuracion/integraciones")}`}
+                  >
+                    <Settings className="h-4 w-4" />
+                    Integraciones
+                  </Link>
+                </li>
+              )}
+            </ul>
           </div>
         )}
       </nav>

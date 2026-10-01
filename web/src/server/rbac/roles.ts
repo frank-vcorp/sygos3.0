@@ -12,22 +12,7 @@ export function canUseViewAs(actorRole: UserRole): boolean {
   return actorRole === "ADMINISTRADOR";
 }
 
-export function roleLabel(role: UserRole): string {
-  const labels: Record<UserRole, string> = {
-    ADMINISTRADOR: "ADMINISTRADOR",
-    CEO: "CEO",
-    COORDINACION_ADMINISTRACION: "COORDINACIÓN DE ADMINISTRACIÓN",
-    GERENTE_OPERATIVO_SYSTRON: "GERENTE OPERATIVO SYSTRON",
-    GERENTE_OPERATIVO_SERVOMOTORES: "GERENTE OPERATIVO SERVOMOTORES",
-    SUPERVISOR_TECNICO_SYSTRON: "SUPERVISOR TÉCNICO SYSTRON",
-    TECNICO_SYSTRON: "TÉCNICO SYSTRON",
-    VENTAS_SYSTRON: "VENTAS SYSTRON",
-    ALMACEN_SYSTRON: "ALMACEN SYSTRON",
-    AYUDANTE_GENERAL_SERVOMOTORES: "AYUDANTE GENERAL SERVOMOTORES",
-    KIOSCO: "KIOSCO",
-  };
-  return labels[role] ?? role;
-}
+export { roleLabel } from "@/lib/role-labels";
 
 /** Menú Fase 1 — ampliar por rol en iteraciones */
 export function canSeeNavSection(
