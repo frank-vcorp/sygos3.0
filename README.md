@@ -32,4 +32,10 @@ Abrir http://localhost:3000 → **Systronia** → cambio de contraseña obligato
 
 **Scaffolding** = armazón inicial: proyecto, Docker, login y shell según mockups, sin módulos de negocio completos ni auth real.
 
-Próximos pasos: PostgreSQL, auth Systronia, RBAC, Configuración, maestros Fase 1.
+## Staging (Coolify)
+
+**https://sygos3-0.vector-ia.mx**
+
+Tras provisionar, configura en Coolify las variables de [web/coolify.md](./web/coolify.md) y redeploy.
+
+Próximos pasos Fase 1: maestros Clientes, Prospectos, Proveedores, folios.
