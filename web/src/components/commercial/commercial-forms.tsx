@@ -6,6 +6,27 @@ import { ClientPickerQuick } from "@/components/commercial/client-picker-quick";
 
 type Line = { concept: string; quantity: number };
 
+const quoteTypeConceptLabel: Record<string, string> = {
+  DIAGNOSTICO: "Diagnóstico",
+  REPARACION_SERVICIO: "Reparación / servicio",
+  SERVICIO_CAMPO: "Servicio en campo",
+  VENTA_EQUIPO: "Venta de equipo",
+};
+
+function defaultConceptFromContext(params: {
+  quoteType: string;
+  prelimType: string;
+  prelimBrand: string;
+  prelimModel: string;
+}): string {
+  const base = quoteTypeConceptLabel[params.quoteType] ?? "Servicio solicitado";
+  const parts = [params.prelimType, params.prelimBrand, params.prelimModel]
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (parts.length === 0) return base;
+  return `${base} — ${parts.join(" ")}`;
+}
+
 export function NewQuoteForm(props: {
   clients: { id: string; legalName: string }[];
   canQuickCreateClient?: boolean;
@@ -26,10 +47,15 @@ export function NewQuoteForm(props: {
       setError("Selecciona o crea un cliente.");
       return;
     }
-    const validLines = lines.filter((l) => l.concept.trim());
+    let validLines = lines.filter((l) => l.concept.trim());
     if (validLines.length === 0) {
-      setError("Indica al menos un concepto o servicio solicitado (sin precio).");
-      return;
+      const inferred = defaultConceptFromContext({
+        quoteType,
+        prelimType: prelimType,
+        prelimBrand: prelimBrand,
+        prelimModel: prelimModel,
+      });
+      validLines = [{ concept: inferred, quantity: lines[0]?.quantity ?? 1 }];
     }
     setLoading(true);
     setError(null);
@@ -99,20 +125,22 @@ export function NewQuoteForm(props: {
       </div>
       <p className="text-xs text-slate-500">
         Solo contexto comercial — <strong>no captures precio</strong>; queda en pendiente de cotizar
-        para CEO/Administrador.
+        para CEO/Administrador. Si dejas el concepto vacío, se arma desde tipo + equipo preliminar.
       </p>
+      <label className="block text-sm font-medium text-slate-800">
+        Concepto / servicio solicitado
+      </label>
       {lines.map((line, i) => (
         <div key={i} className="flex gap-2">
           <input
             className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm"
-            placeholder="Servicio o concepto solicitado *"
+            placeholder="Ej. Diagnóstico servomotor (opcional si hay datos arriba)"
             value={line.concept}
             onChange={(e) => {
               const next = [...lines];
               next[i] = { ...line, concept: e.target.value };
               setLines(next);
             }}
-            required
           />
           <input
             type="number"
