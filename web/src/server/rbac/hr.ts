@@ -41,6 +41,18 @@ export function canRunPayroll(role: UserRole): boolean {
   return canSeeHrModule(role);
 }
 
+export function canAuthorizePayroll(role: UserRole): boolean {
+  return isSuperAdmin(role) || role === "CEO" || role === "ADMINISTRADOR";
+}
+
+export function canAdjustPayrollExtras(role: UserRole): boolean {
+  return canSeeHrModule(role);
+}
+
+export function canPayCommissions(role: UserRole): boolean {
+  return canAuthorizePayroll(role);
+}
+
 export function canSeeOwnOvertime(role: UserRole): boolean {
   return role !== "KIOSCO";
 }

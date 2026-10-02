@@ -63,6 +63,8 @@ export const companySettings = pgTable("company_settings", {
     .default(false)
     .notNull(),
   testModeEnabled: boolean("test_mode_enabled").default(false).notNull(),
+  bonusPunctualityMxn: integer("bonus_punctuality_mxn").default(0).notNull(),
+  bonusProductivityMxn: integer("bonus_productivity_mxn").default(0).notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
@@ -1587,6 +1589,11 @@ export const payrollRunStatusEnum = pgEnum("payroll_run_status", [
   "PAGADA",
 ]);
 
+export const payrollRunKindEnum = pgEnum("payroll_run_kind", [
+  "SEMANAL",
+  "AGUINALDO",
+]);
+
 export const commissionStatusEnum = pgEnum("commission_status", [
   "DEVENGADA",
   "PAGADA",
@@ -1610,6 +1617,7 @@ export const employees = pgTable(
     vacationBalanceDays: integer("vacation_balance_days").default(0).notNull(),
     kioskEnabled: boolean("kiosk_enabled").default(true).notNull(),
     attendanceExempt: boolean("attendance_exempt").default(false).notNull(),
+    bonusesEligible: boolean("bonuses_eligible").default(true).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -1688,6 +1696,7 @@ export const payrollRuns = pgTable(
       .notNull()
       .references(() => companies.id, { onDelete: "cascade" }),
     weekKey: text("week_key").notNull(),
+    runKind: payrollRunKindEnum("run_kind").default("SEMANAL").notNull(),
     folioNumber: integer("folio_number").notNull(),
     status: payrollRunStatusEnum("status").default("BORRADOR").notNull(),
     authorizedByUserId: uuid("authorized_by_user_id").references(() => users.id),
@@ -1715,6 +1724,8 @@ export const payrollLines = pgTable("payroll_lines", {
     .references(() => employees.id),
   concept: text("concept").notNull(),
   amountMxn: integer("amount_mxn").notNull(),
+  lineKind: text("line_kind").default("SYSTEM").notNull(),
+  createdByUserId: uuid("created_by_user_id").references(() => users.id),
   vacationRequestId: uuid("vacation_request_id").references(
     () => vacationRequests.id,
   ),

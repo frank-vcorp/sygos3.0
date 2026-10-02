@@ -26,6 +26,19 @@ export async function createVacationRequest(params: {
 }) {
   const weekdayDays = countWeekdays(params.startDate, params.endDate);
   const db = getDb();
+  const [emp] = await db
+    .select({ attendanceExempt: employees.attendanceExempt })
+    .from(employees)
+    .where(
+      and(
+        eq(employees.id, params.employeeId),
+        eq(employees.companyId, params.companyId),
+      ),
+    )
+    .limit(1);
+  if (!emp) throw new Error("EMPLOYEE_INVALID");
+  if (emp.attendanceExempt) throw new Error("VACATION_NOT_ALLOWED");
+
   const [row] = await db
     .insert(vacationRequests)
     .values({

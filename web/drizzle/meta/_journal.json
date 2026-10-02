@@ -71,6 +71,13 @@
       "when": 1790909342503,
       "tag": "0009_lethal_pepper_potts",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790909936118,
+      "tag": "0010_bumpy_ulik",
+      "breakpoints": true
     }
   ]
 }

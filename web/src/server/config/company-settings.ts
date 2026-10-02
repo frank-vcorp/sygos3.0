@@ -47,6 +47,8 @@ export async function updateCompanySettings(
     directPurchaseIndividualLimitMxn: number;
     servomotoresInventoryEnabled: boolean;
     testModeEnabled: boolean;
+    bonusPunctualityMxn: number;
+    bonusProductivityMxn: number;
   }>,
 ) {
   const db = getDb();

@@ -1,8 +1,9 @@
 import { redirect } from "next/navigation";
+import { CommissionsPayButton } from "@/components/hr/commissions-pay";
 import { formatMxn } from "@/server/commercial/money";
 import { listCommissions, syncCommissionsForAuthorizedQuotes } from "@/server/hr/commissions";
 import { getAuthContext } from "@/server/auth/session";
-import { canSeeHrModule } from "@/server/rbac/hr";
+import { canPayCommissions, canSeeHrModule } from "@/server/rbac/hr";
 
 export const dynamic = "force-dynamic";
 
@@ -13,10 +14,18 @@ export default async function ComisionesPage() {
 
   await syncCommissionsForAuthorizedQuotes(auth.activeCompany.id);
   const rows = await listCommissions(auth.activeCompany.id);
+  const periods = [...new Set(rows.map((r) => r.periodKey))].sort().reverse();
 
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold">Comisiones</h1>
+      {canPayCommissions(auth.effective.role) && periods.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {periods.slice(0, 3).map((p) => (
+            <CommissionsPayButton key={p} periodKey={p} />
+          ))}
+        </div>
+      )}
       <table className="min-w-full rounded-xl border bg-white text-sm">
         <thead className="border-b bg-slate-50 text-xs uppercase text-slate-500">
           <tr>

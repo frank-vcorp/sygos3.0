@@ -49,6 +49,8 @@ export function CompanySettingsForm({
           ? fd.get("servomotoresInventoryEnabled") === "on"
           : undefined,
       testModeEnabled: fd.get("testModeEnabled") === "on",
+      bonusPunctualityMxn: Number(fd.get("bonusPunctualityMxn") || 0),
+      bonusProductivityMxn: Number(fd.get("bonusProductivityMxn") || 0),
     };
     const res = await fetch("/api/config/company-settings", {
       method: "PATCH",
@@ -196,6 +198,37 @@ export function CompanySettingsForm({
           </label>
         </fieldset>
       )}
+
+      <fieldset className="rounded-xl border border-slate-200 bg-white p-6">
+        <legend className="px-1 text-sm font-semibold text-slate-900">
+          Bonos de nómina (mensual)
+        </legend>
+        <p className="mt-1 text-xs text-slate-500">
+          Se incluyen en el borrador de la semana que cierra el mes. Gerente SM excluido.
+        </p>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <label className="text-sm">
+            Bono puntualidad (MXN/mes)
+            <input
+              name="bonusPunctualityMxn"
+              type="number"
+              min={0}
+              defaultValue={settings.bonusPunctualityMxn}
+              className="mt-1 w-full rounded border px-3 py-2"
+            />
+          </label>
+          <label className="text-sm">
+            Bono productividad (MXN/mes)
+            <input
+              name="bonusProductivityMxn"
+              type="number"
+              min={0}
+              defaultValue={settings.bonusProductivityMxn}
+              className="mt-1 w-full rounded border px-3 py-2"
+            />
+          </label>
+        </div>
+      </fieldset>
 
       <fieldset className="rounded-xl border border-amber-200 bg-amber-50/50 p-6">
         <legend className="px-1 text-sm font-semibold text-slate-900">

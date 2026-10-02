@@ -57,6 +57,8 @@ export async function createEmployee(params: {
       vacationBalanceDays: params.vacationBalanceDays ?? 0,
       attendanceExempt:
         params.userRole ? attendanceExemptForRole(params.userRole) : false,
+      bonusesEligible:
+        params.userRole ? !attendanceExemptForRole(params.userRole) : true,
       kioskEnabled: params.userRole ?
         !attendanceExemptForRole(params.userRole)
       : true,
