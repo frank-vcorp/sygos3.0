@@ -11,6 +11,7 @@ import { ensureCommercialCatalog } from "@/server/commercial/bootstrap";
 import { ensureServomotoresSystronClient } from "@/server/commercial/intercompany-clients";
 import { ensureSystronServomotoresSupplier } from "@/server/masters/suppliers";
 import { hashPassword } from "@/server/auth/password";
+import { ensureDemoViewAsUsers } from "@/server/setup/demo-view-as-users";
 
 async function main() {
   const password = process.env.ADMIN_INITIAL_PASSWORD;
@@ -87,6 +88,15 @@ async function main() {
       actorUserId: existingUser.id,
     });
     await ensureServomotoresSystronClient(existingUser.id);
+  }
+
+  const demoPassword =
+    process.env.QA_VIEW_AS_PASSWORD ?? process.env.ADMIN_INITIAL_PASSWORD;
+  if (demoPassword && demoPassword.length >= 10) {
+    const r = await ensureDemoViewAsUsers(demoPassword);
+    console.log(
+      `Usuarios QA Ver como: ${r.created.length} creados, ${r.updated.length} actualizados.`,
+    );
   }
 }
 

@@ -28,7 +28,35 @@ En producción real: **nunca** `SYGOS_INTERNAL_FISCAL=1` (ver [PRODUCCION.md](./
 
 Los datos **sí persisten** en la BD de staging (no es sandbox desechable).
 
-## 3. Antes de empezar QA
+## 3. Usuarios «Ver como» (QA por rol)
+
+En Coolify define **`QA_VIEW_AS_PASSWORD`** (mín. 10 caracteres) o reutiliza **`ADMIN_INITIAL_PASSWORD`**: cada deploy ejecuta `db:seed` y crea/actualiza los QA.
+
+Manual local:
+
+```bash
+cd web
+QA_VIEW_AS_PASSWORD='TuClaveSegura10+' npm run db:seed-demo-view-as
+```
+
+Emergencia en staging (con `SETUP_BOOTSTRAP_KEY` temporal): `POST /api/setup/demo-view-as-users` con `setupKey` + `password`.
+
+| Usuario | Rol | Empresa(s) |
+|---------|-----|------------|
+| `qa.ceo` | CEO | SYSTRON + Servomotores |
+| `qa.coordinacion` | Coordinación | Ambas |
+| `qa.gerente.systron` | Gerente Op. SYSTRON | SYSTRON |
+| `qa.gerente.sm` | Gerente Op. SM | Servomotores |
+| `qa.supervisor.systron` | Supervisor técnico | SYSTRON |
+| `qa.tecnico.systron` | Técnico | SYSTRON |
+| `qa.ventas.systron` | Ventas | SYSTRON |
+| `qa.almacen.systron` | Almacén | SYSTRON |
+| `qa.ayudante.sm` | Ayudante general SM | Servomotores |
+| `qa.kiosco` | Kiosco | SYSTRON |
+
+Login como **Systronia** → header **Ver como** → elegir usuario QA.
+
+## 4. Antes de empezar QA
 
 1. Migraciones al día (deploy ejecuta `db:migrate`).
 2. Login **Systronia** → quitar Modo de Pruebas en `/configuracion/modo-pruebas` salvo pruebas puntuales.
@@ -36,7 +64,7 @@ Los datos **sí persisten** en la BD de staging (no es sandbox desechable).
 4. Datos fiscales de prueba en colaboradores con nómina timbrada: RFC genérico de pruebas SAT si aplica a tu proceso.
 5. Checklist detallado: `/configuracion/cierre-e2e`.
 
-## 4. Guion por rol (resumen)
+## 5. Guion por rol (resumen)
 
 | Rol | Rutas clave | Validar |
 |-----|-------------|---------|
@@ -54,7 +82,7 @@ Flujos fiscales sin SAT:
 - Para probar timbrado lógico: emitir **factura** → debe quedar EMITIDA con aviso de simulación interna.
 - Nómina: corrida → autorizar → `/capital-humano/nomina/[id]/imprimir`.
 
-## 5. Diferencia vs Modo de Pruebas
+## 6. Diferencia vs Modo de Pruebas
 
 | | Modo de Pruebas | `SYGOS_INTERNAL_FISCAL` |
 |--|-----------------|-------------------------|
@@ -64,13 +92,13 @@ Flujos fiscales sin SAT:
 
 Puedes combinar ambos; en staging UAT normalmente **solo** fiscal interno.
 
-## 6. Limitaciones conocidas (sin integraciones)
+## 7. Limitaciones conocidas (sin integraciones)
 
 - CFDI no válido ante SAT (solo registro interno).
 - Movimientos financieros automáticos post-nómina pueden estar simplificados (ver discovery).
 - Algunas pantallas aún usan IDs en URL (p. ej. producción por OS).
 
-## 7. Pasar a producción
+## 8. Pasar a producción
 
 1. App Coolify nueva o FQDN prod, **sin** `SYGOS_INTERNAL_FISCAL`.
 2. Configurar Facturapi por empresa.

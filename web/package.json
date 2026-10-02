@@ -10,6 +10,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/db/migrate.ts",
     "db:seed": "tsx src/db/seed.ts",
+    "db:seed-demo-view-as": "tsx src/db/seed-demo-view-as.ts",
     "db:reset-systronia": "tsx src/db/reset-systronia-password.ts"
   },
   "dependencies": {
