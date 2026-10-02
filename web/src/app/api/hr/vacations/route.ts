@@ -6,7 +6,9 @@ import {
   createVacationRequest,
   listVacationRequests,
 } from "@/server/hr/vacations";
+import { assertCanRegisterVacationFor } from "@/server/hr/vacation-policy";
 import { canApproveVacations, canSeeHrModule } from "@/server/rbac/hr";
+import { isDirectBossRole } from "@/server/rbac/hr";
 
 export async function GET() {
   const auth = await getAuthContext();
@@ -39,9 +41,21 @@ export async function POST(request: Request) {
   try {
     const body = postSchema.parse(await request.json());
     if (body.action === "create") {
-      if (!canSeeHrModule(auth.effective.role)) {
-        return NextResponse.json({ error: "No autorizado." }, { status: 403 });
+      if (
+        !isDirectBossRole(auth.effective.role) &&
+        !canApproveVacations(auth.effective.role)
+      ) {
+        return NextResponse.json(
+          { error: "Solo el jefe directo o CEO/Administrador registra vacaciones." },
+          { status: 403 },
+        );
       }
+      await assertCanRegisterVacationFor({
+        companyId: auth.activeCompany.id,
+        actorUserId: auth.actor.id,
+        actorRole: auth.effective.role,
+        targetEmployeeId: body.employeeId,
+      });
       const row = await createVacationRequest({
         companyId: auth.activeCompany.id,
         employeeId: body.employeeId,
@@ -65,6 +79,12 @@ export async function POST(request: Request) {
     const msg = e instanceof Error ? e.message : "";
     if (msg === "INSUFFICIENT_BALANCE") {
       return NextResponse.json({ error: "Saldo insuficiente." }, { status: 400 });
+    }
+    if (msg === "VACATION_BOSS_ONLY") {
+      return NextResponse.json(
+        { error: "Solo puede registrar vacaciones para sus subordinados directos." },
+        { status: 403 },
+      );
     }
     return NextResponse.json({ error: "Solicitud inválida." }, { status: 400 });
   }

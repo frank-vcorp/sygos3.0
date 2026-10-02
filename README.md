@@ -28,9 +28,11 @@ npm run dev
 
 Abrir http://localhost:3000 → **Systronia** → cambio de contraseña obligatorio → `/inicio`.
 
-## Scaffolding vs producto
+## Madurez funcional
 
-**Scaffolding** = armazón inicial: proyecto, Docker, login y shell según mockups, sin módulos de negocio completos ni auth real.
+Discovery §12 (criterios de aceptación): implementación completa en código — ver [`web/docs/DISCOVERY-12-CHECKLIST.md`](web/docs/DISCOVERY-12-CHECKLIST.md) y [`SYGOS_3.0_PLAN_VALIDACION_FINAL.md`](SYGOS_3.0_PLAN_VALIDACION_FINAL.md).
+
+Sign-off operativo: recorrido UAT en staging y checklist en `/configuracion/cierre-e2e`.
 
 ## Staging (Coolify)
 

@@ -1,5 +1,7 @@
 # Alineación discovery §12 (gaps cerrados)
 
+> Checklist oficial de cierre: **[DISCOVERY-12-CHECKLIST.md](./DISCOVERY-12-CHECKLIST.md)** (§12 al 100 % funcional).
+
 Tras migración `0012_discovery_completion`:
 
 | Área | Discovery | Implementación |

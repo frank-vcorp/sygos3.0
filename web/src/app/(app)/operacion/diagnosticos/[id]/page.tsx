@@ -1,12 +1,20 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { FunctionalHistoryPanel } from "@/components/history/functional-history-panel";
+import { ExternalServicePanel } from "@/components/ops/external-service-panel";
 import { DiagnosticActionsPanel } from "@/components/ops/ops-forms";
+import {
+  WarrantyCeoCommercialButton,
+  WarrantyGerenteActions,
+} from "@/components/ops/warranty-actions";
 import type { CompanySlug } from "@/lib/company";
+import { resolveCompanyIds } from "@/server/assets/context";
 import { listBitacora } from "@/server/ops/bitacora";
 import { getDiagnosticDetail } from "@/server/ops/diagnostics";
+import { listSuppliers } from "@/server/masters/suppliers";
 import { getAuthContext } from "@/server/auth/session";
 import { canSeeTechnicalOps } from "@/server/rbac/ops";
-import { resolveCompanyIds } from "@/server/assets/context";
+import { isSuperAdmin } from "@/server/rbac/roles";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +36,13 @@ export default async function DiagnosticoDetallePage({ params }: Props) {
     detail.diagnostic.companyId === ids.servomotoresId;
 
   const entries = await listBitacora({ diagnosticId: id });
+  const suppliers = await listSuppliers({
+    companyId: detail.diagnostic.companyId,
+  });
+  const actorCanCeo =
+    auth.effective.role === "CEO" ||
+    auth.effective.role === "ADMINISTRADOR" ||
+    isSuperAdmin(auth.effective.role);
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -42,22 +57,63 @@ export default async function DiagnosticoDetallePage({ params }: Props) {
         <p className="text-sm text-slate-500">
           {detail.attention?.reportedFailure} · Estado {detail.diagnostic.status}
         </p>
+        {detail.attention?.warrantySourceWorkOrderId && (
+          <p className="text-sm text-slate-600">
+            Reparación origen:{" "}
+            <Link
+              href={`/operacion/os/${detail.attention.warrantySourceWorkOrderId}`}
+              className="text-sygos-teal underline"
+            >
+              ver OS original
+            </Link>
+          </p>
+        )}
+        {detail.diagnostic.warrantyDecision && (
+          <p className="text-sm text-amber-900">
+            Decisión técnica: {detail.diagnostic.warrantyDecision}
+            {detail.diagnostic.warrantyCommercialOverride
+              ? " · Override comercial CEO"
+              : ""}
+          </p>
+        )}
         {detail.diagnostic.status === "VALIDADO" && (
           <p className="mt-2 text-sm text-emerald-800">
             Validado —{" "}
-            <a href="/comercial/pendientes-cotizar" className="text-sygos-teal underline">
+            <Link href="/comercial/pendientes-cotizar" className="text-sygos-teal underline">
               pendiente de cotizar
-            </a>
+            </Link>
             .
           </p>
         )}
       </div>
+      <WarrantyGerenteActions
+        diagnosticId={id}
+        status={detail.diagnostic.status}
+        attentionType={detail.attention?.attentionType}
+      />
+      <WarrantyCeoCommercialButton
+        diagnosticId={id}
+        attentionType={detail.attention?.attentionType}
+        warrantyDecision={detail.diagnostic.warrantyDecision}
+        commercialOverride={detail.diagnostic.warrantyCommercialOverride}
+        actorCanCeo={actorCanCeo}
+      />
       <DiagnosticActionsPanel
         diagnosticId={id}
         status={detail.diagnostic.status}
         readOnly={readOnly}
         equiId={detail.attention?.equiId}
       />
+      {!readOnly && (
+        <ExternalServicePanel
+          diagnosticId={id}
+          equiId={detail.attention?.equiId}
+          suppliers={suppliers.map((s) => ({
+            id: s.id,
+            legalName: s.legalName,
+          }))}
+        />
+      )}
       <section className="rounded-xl border bg-white p-4">
         <h2 className="text-sm font-semibold">Bitácora</h2>
         <ul className="mt-3 divide-y text-sm">
@@ -72,6 +128,7 @@ export default async function DiagnosticoDetallePage({ params }: Props) {
           ))}
         </ul>
       </section>
+      <FunctionalHistoryPanel entityType="diagnostic" entityId={id} />
     </div>
   );
 }

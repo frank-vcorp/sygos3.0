@@ -311,6 +311,38 @@ export async function updateDiagnostic(params: {
     .where(eq(diagnostics.id, params.diagnosticId))
     .returning();
 
+  if (updated) {
+    const { logFunctionalHistory } = await import("@/server/history/functional");
+    if (params.patch.status === "VALIDADO") {
+      await logFunctionalHistory({
+        companyId: params.companyId,
+        entityType: "diagnostic",
+        entityId: params.diagnosticId,
+        action: "VALIDADO",
+        actorUserId: params.actorUserId,
+      });
+    }
+    if (params.patch.warrantyDecision) {
+      await logFunctionalHistory({
+        companyId: params.companyId,
+        entityType: "diagnostic",
+        entityId: params.diagnosticId,
+        action: `GARANTIA_${params.patch.warrantyDecision}`,
+        actorUserId: params.actorUserId,
+      });
+    }
+    if (params.patch.status === "DEVUELTO_CORRECCION") {
+      await logFunctionalHistory({
+        companyId: params.companyId,
+        entityType: "diagnostic",
+        entityId: params.diagnosticId,
+        action: "DEVUELTO_CORRECCION",
+        detail: params.patch.validationReturnReason ?? undefined,
+        actorUserId: params.actorUserId,
+      });
+    }
+  }
+
   return updated;
 }
 

@@ -40,7 +40,7 @@ export default function ProduccionPage() {
           await refresh();
         }}
       >
-        <input name="workOrderId" required placeholder="UUID OS" className="min-w-[16rem] flex-1 rounded border px-2 py-1" />
+        <input name="workOrderId" required placeholder="Folio OS (ej. OS-12)" className="min-w-[16rem] flex-1 rounded border px-2 py-1" />
         <input name="hoursTenths" type="number" min={1} placeholder="Horas x10" className="w-28 rounded border px-2 py-1" />
         <input name="note" placeholder="Nota" className="min-w-[8rem] flex-1 rounded border px-2 py-1" />
         <button type="submit" className="rounded bg-sygos-navy px-3 py-1 text-white">

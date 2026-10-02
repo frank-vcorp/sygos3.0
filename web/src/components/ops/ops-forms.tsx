@@ -249,11 +249,6 @@ export function DiagnosticActionsPanel({
           Agregar entrada
         </button>
       </form>
-      {equiId && (
-        <p className="text-xs text-slate-500">
-          Servicio externo: usar API con proveedor desde detalle (Fase 3) o registrar salida manual en Almacén.
-        </p>
-      )}
     </div>
   );
 }

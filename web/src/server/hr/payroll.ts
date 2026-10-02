@@ -153,17 +153,33 @@ export async function generatePayrollDraft(params: {
         ? weekdayDaysInRange(v.startDate, v.endDate, weekBounds.start, weekBounds.end)
         : v.weekdayDays;
     if (daysThisWeek <= 0) continue;
-    const daily = emp.dailySalaryStampedMxn + emp.dailySalaryCashMxn;
+    const stamped = emp.dailySalaryStampedMxn;
+    const cash = emp.dailySalaryCashMxn;
+    const daily = stamped + cash;
     const prima = Math.round(daily * daysThisWeek * 0.25);
-    if (prima > 0) {
-      lines.push({
-        payrollRunId: run.id,
-        employeeId: emp.id,
-        concept: `Prima vacacional 25% (${daysThisWeek} d)`,
-        amountMxn: prima,
-        lineKind: "SYSTEM",
-        vacationRequestId: v.id,
-      });
+    if (prima > 0 && daily > 0) {
+      const primaStamped = Math.round(prima * (stamped / daily));
+      const primaCash = prima - primaStamped;
+      if (primaStamped > 0) {
+        lines.push({
+          payrollRunId: run.id,
+          employeeId: emp.id,
+          concept: `Prima vacacional timbrada (${daysThisWeek} d)`,
+          amountMxn: primaStamped,
+          lineKind: "SYSTEM",
+          vacationRequestId: v.id,
+        });
+      }
+      if (primaCash > 0) {
+        lines.push({
+          payrollRunId: run.id,
+          employeeId: emp.id,
+          concept: `Prima vacacional efectivo (${daysThisWeek} d)`,
+          amountMxn: primaCash,
+          lineKind: "SYSTEM",
+          vacationRequestId: v.id,
+        });
+      }
     }
   }
 

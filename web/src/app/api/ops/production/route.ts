@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getAuthContext } from "@/server/auth/session";
+import { resolveWorkOrderId } from "@/server/assets/work-orders";
 import { listProductionEntries, recordProductionEntry } from "@/server/ops/production";
 import { canSeeProduction } from "@/server/rbac/panels";
 
@@ -14,7 +15,7 @@ export async function GET() {
 }
 
 const postSchema = z.object({
-  workOrderId: z.string().uuid(),
+  workOrderId: z.string().min(1),
   hoursTenths: z.number().int().min(1),
   note: z.string().optional(),
 });
@@ -26,9 +27,16 @@ export async function POST(request: Request) {
   }
   try {
     const body = postSchema.parse(await request.json());
+    const workOrderId = await resolveWorkOrderId(
+      auth.activeCompany.id,
+      body.workOrderId,
+    );
+    if (!workOrderId) {
+      return NextResponse.json({ error: "OS no encontrada (use OS-123)." }, { status: 404 });
+    }
     const entry = await recordProductionEntry({
       companyId: auth.activeCompany.id,
-      workOrderId: body.workOrderId,
+      workOrderId,
       technicianUserId: auth.effective.id,
       hoursTenths: body.hoursTenths,
       note: body.note,

@@ -168,6 +168,11 @@ export async function createSparePartRequest(params: {
     .limit(1);
   if (!wo) return null;
 
+  await db
+    .update(workOrders)
+    .set({ repairStatus: "EN_ESPERA_REFACCIONES", updatedAt: new Date() })
+    .where(eq(workOrders.id, params.workOrderId));
+
   const [inserted] = await db
     .insert(sparePartRequests)
     .values({
@@ -214,5 +219,44 @@ export async function fulfillSparePartRequest(params: {
     })
     .where(eq(sparePartRequests.id, params.requestId))
     .returning();
+
+  if (updated) {
+    const pending = await db
+      .select()
+      .from(sparePartRequests)
+      .where(eq(sparePartRequests.workOrderId, req.workOrderId));
+    const allServed = pending.every((p) => p.status === "SURTIDA");
+    if (allServed) {
+      await db
+        .update(workOrders)
+        .set({ repairStatus: "EN_REPARACION", updatedAt: new Date() })
+        .where(eq(workOrders.id, req.workOrderId));
+    }
+  }
   return updated;
+}
+
+export async function resolveWorkOrderId(
+  companyId: string,
+  ref: string,
+): Promise<string | null> {
+  const trimmed = ref.trim();
+  const uuidRe =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  if (uuidRe.test(trimmed)) return trimmed;
+  const m = trimmed.match(/^OS-(\d+)$/i);
+  if (!m) return null;
+  const folioNumber = Number(m[1]);
+  const db = getDb();
+  const [wo] = await db
+    .select({ id: workOrders.id })
+    .from(workOrders)
+    .where(
+      and(
+        eq(workOrders.companyId, companyId),
+        eq(workOrders.folioNumber, folioNumber),
+      ),
+    )
+    .limit(1);
+  return wo?.id ?? null;
 }

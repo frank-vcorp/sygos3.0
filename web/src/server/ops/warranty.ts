@@ -78,6 +78,16 @@ export async function applyCommercialWarrantyOverride(params: {
     })
     .where(eq(diagnostics.id, params.diagnosticId))
     .returning();
+  if (updated) {
+    const { logFunctionalHistory } = await import("@/server/history/functional");
+    await logFunctionalHistory({
+      companyId: params.companyId,
+      entityType: "diagnostic",
+      entityId: params.diagnosticId,
+      action: "GARANTIA_OVERRIDE_CEO",
+      actorUserId: params.actorUserId,
+    });
+  }
   return updated;
 }
 

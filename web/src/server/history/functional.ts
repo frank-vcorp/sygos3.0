@@ -1,4 +1,4 @@
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { functionalHistoryEntries } from "@/db/schema";
 
@@ -31,7 +31,10 @@ export async function listFunctionalHistory(params: {
     .select()
     .from(functionalHistoryEntries)
     .where(
-      eq(functionalHistoryEntries.entityId, params.entityId),
+      and(
+        eq(functionalHistoryEntries.entityType, params.entityType),
+        eq(functionalHistoryEntries.entityId, params.entityId),
+      ),
     )
     .orderBy(desc(functionalHistoryEntries.createdAt))
     .limit(params.limit ?? 40);

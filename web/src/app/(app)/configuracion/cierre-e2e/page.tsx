@@ -64,10 +64,11 @@ export default async function CierreE2EPage() {
       <Link href="/configuracion/general" className="text-sm text-sygos-teal">
         ← Configuración
       </Link>
-      <h1 className="text-2xl font-semibold">Checklist cierre E2E (Fase 9)</h1>
+      <h1 className="text-2xl font-semibold">Checklist cierre E2E (Discovery §12)</h1>
       <p className="text-sm text-slate-600">
-        Validación manual extremo a extremo según discovery §12. Marque en su
-        proceso de QA; no sustituye pruebas automatizadas.
+        Validación manual extremo a extremo. El inventario completo §12 está en{" "}
+        <code className="text-xs">web/docs/DISCOVERY-12-CHECKLIST.md</code> del
+        repositorio (100 % funcional implementado; ítems 🧪 requieren sign-off UAT aquí).
       </p>
       {SECTIONS.map((section) => (
         <section key={section.title} className="rounded-xl border bg-white p-4">
