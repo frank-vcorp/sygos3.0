@@ -7,6 +7,8 @@ import { resolveCompanyIds } from "@/server/assets/context";
 import { getMotorDetail } from "@/server/assets/motors";
 import { listBitacoraForMotorReadonly } from "@/server/ops/diagnostics";
 import { getAuthContext } from "@/server/auth/session";
+import { MotBaseQuoteButton } from "@/components/commercial/mot-base-quote-button";
+import { canManageQuotePricing } from "@/server/rbac/commercial";
 import { canOperateServomotoresCustody, canSeeMotors } from "@/server/rbac/assets";
 
 export const dynamic = "force-dynamic";
@@ -49,6 +51,11 @@ export default async function MotDetailPage({ params }: Props) {
           {detail.motor.servomotoresIntakeStatus}
         </p>
       </div>
+      {slug === "SERVOMOTORES" &&
+        detail.motor.origin === "SYSTRON" &&
+        canManageQuotePricing(auth.effective.role) && (
+          <MotBaseQuoteButton motorId={id} />
+        )}
       {canMove && slug === "SERVOMOTORES" && (
         <MovementActions
           entityKind="motor"

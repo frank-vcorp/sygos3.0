@@ -54,6 +54,15 @@ export async function PATCH(request: Request, { params }: Params) {
     if (!updated) {
       return NextResponse.json({ error: "No encontrado." }, { status: 404 });
     }
+    if (updated.repairStatus === "REPARACION_TERMINADA") {
+      const { ensureQuoteFromWorkOrder } = await import(
+        "@/server/commercial/quotes"
+      );
+      await ensureQuoteFromWorkOrder({
+        workOrderId: id,
+        actorUserId: auth.actor.id,
+      });
+    }
     return NextResponse.json({ workOrder: updated });
   } catch {
     return NextResponse.json({ error: "Solicitud inválida." }, { status: 400 });

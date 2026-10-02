@@ -7,6 +7,8 @@ import {
 } from "./schema";
 import { ensureCompanySettings } from "@/server/config/company-settings";
 import { ensureDefaultPriorities } from "@/server/ops/priorities";
+import { ensureCommercialCatalog } from "@/server/commercial/bootstrap";
+import { ensureServomotoresSystronClient } from "@/server/commercial/intercompany-clients";
 import { ensureSystronServomotoresSupplier } from "@/server/masters/suppliers";
 import { hashPassword } from "@/server/auth/password";
 
@@ -40,6 +42,7 @@ async function main() {
   for (const company of allCompanies) {
     await ensureCompanySettings(company.id);
     await ensureDefaultPriorities(company.id);
+    await ensureCommercialCatalog(company.id);
   }
   const systron = allCompanies.find((c) => c.slug === "SYSTRON")!;
   const servomotores = allCompanies.find((c) => c.slug === "SERVOMOTORES")!;
@@ -76,12 +79,14 @@ async function main() {
       systronCompanyId: systron.id,
       actorUserId: inserted.id,
     });
+    await ensureServomotoresSystronClient(inserted.id);
   } else {
     console.log("Seed omitido: Systronia ya existe.");
     await ensureSystronServomotoresSupplier({
       systronCompanyId: systron.id,
       actorUserId: existingUser.id,
     });
+    await ensureServomotoresSystronClient(existingUser.id);
   }
 }
 

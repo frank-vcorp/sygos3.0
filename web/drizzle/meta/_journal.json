@@ -36,6 +36,13 @@
       "when": 1790904192167,
       "tag": "0004_curly_the_stranger",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790905259260,
+      "tag": "0005_wild_gamora",
+      "breakpoints": true
     }
   ]
 }

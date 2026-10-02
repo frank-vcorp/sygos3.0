@@ -1,0 +1,135 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { QuoteActions } from "@/components/commercial/commercial-forms";
+import { formatMxn } from "@/server/commercial/money";
+import { getQuoteDetail } from "@/server/commercial/quotes";
+import { getAuthContext } from "@/server/auth/session";
+import {
+  canManageQuotePricing,
+  canSeeCommercialModule,
+  canSeeIntercompanyBase,
+} from "@/server/rbac/commercial";
+
+export const dynamic = "force-dynamic";
+
+type Props = { params: Promise<{ id: string }> };
+
+export default async function CotizacionDetallePage({ params }: Props) {
+  const auth = await getAuthContext();
+  if (!auth) redirect("/login");
+  if (!canSeeCommercialModule(auth.effective.role)) redirect("/inicio");
+
+  const { id } = await params;
+  const detail = await getQuoteDetail(auth.activeCompany.id, id);
+  if (!detail) redirect("/comercial/cotizaciones");
+
+  const q = detail.quote;
+  const showBase =
+    canSeeIntercompanyBase(auth.effective.role) &&
+    detail.quote.intercompanyBaseTotalMxn != null;
+
+  return (
+    <div className="mx-auto max-w-3xl space-y-6">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold text-slate-900">{q.folio}</h1>
+          <p className="text-sm text-slate-500">
+            {detail.client?.legalName} · {q.status.replace(/_/g, " ")}
+          </p>
+        </div>
+        <Link
+          href={`/comercial/cotizaciones/${id}/imprimir`}
+          className="rounded-lg border border-slate-200 px-3 py-2 text-sm hover:bg-slate-50"
+          target="_blank"
+        >
+          PDF / Imprimir
+        </Link>
+      </div>
+
+      <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm text-sm space-y-2">
+        <p>
+          <span className="text-slate-500">Tipo:</span> {q.quoteType.replace(/_/g, " ")}
+        </p>
+        <p>
+          <span className="text-slate-500">Origen:</span> {q.quoteOrigin.replace(/_/g, " ")}
+        </p>
+        {detail.assetLabel && (
+          <p>
+            <span className="text-slate-500">Equipo:</span> {detail.assetLabel}
+          </p>
+        )}
+        {(q.prelimBrand || q.prelimModel) && (
+          <p>
+            <span className="text-slate-500">Preliminar:</span>{" "}
+            {[q.prelimEquipmentType, q.prelimBrand, q.prelimModel, q.prelimSerial]
+              .filter(Boolean)
+              .join(" · ")}
+          </p>
+        )}
+        {showBase && (
+          <p className="text-amber-800">
+            Base intercompañía Servomotores: {formatMxn(q.intercompanyBaseTotalMxn)}
+          </p>
+        )}
+        {q.diagnosticId && (
+          <p>
+            <Link href={`/operacion/diagnosticos/${q.diagnosticId}`} className="text-sygos-teal">
+              Ver diagnóstico origen
+            </Link>
+          </p>
+        )}
+        {q.workOrderId && (
+          <p>
+            <Link href={`/operacion/os/${q.workOrderId}`} className="text-sygos-teal">
+              Ver OS origen
+            </Link>
+          </p>
+        )}
+      </section>
+
+      <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 className="font-medium">Conceptos</h2>
+        <ul className="mt-3 space-y-2 text-sm">
+          {detail.lines.map((l) => (
+            <li key={l.id} className="flex justify-between border-b border-slate-100 py-2">
+              <span>
+                {l.concept} × {l.quantity}
+              </span>
+              {l.unitPriceMxn != null && <span>{formatMxn(l.unitPriceMxn)}</span>}
+            </li>
+          ))}
+        </ul>
+        <dl className="mt-4 grid grid-cols-2 gap-2 text-sm">
+          <dt className="text-slate-500">Subtotal</dt>
+          <dd>{formatMxn(q.subtotalMxn)}</dd>
+          <dt className="text-slate-500">IVA 16%</dt>
+          <dd>{formatMxn(q.ivaMxn)}</dd>
+          <dt className="text-slate-500 font-medium">Total</dt>
+          <dd className="font-semibold">{formatMxn(q.totalMxn)}</dd>
+        </dl>
+      </section>
+
+      <QuoteActions
+        quoteId={id}
+        status={q.status}
+        canPrice={canManageQuotePricing(auth.effective.role)}
+        canDecide={canSeeCommercialModule(auth.effective.role)}
+        contacts={detail.recipients.map((r) => ({ id: r.contactId, name: r.name }))}
+      />
+
+      {detail.revisions.length > 0 && (
+        <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm text-sm">
+          <h2 className="font-medium">Historial de precio</h2>
+          <ul className="mt-2 space-y-1 text-slate-600">
+            {detail.revisions.map((r) => (
+              <li key={r.id}>
+                {r.note} — {formatMxn(r.totalMxn)} ·{" "}
+                {r.createdAt?.toLocaleString("es-MX")}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+    </div>
+  );
+}

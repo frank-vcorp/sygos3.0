@@ -44,7 +44,11 @@ export default async function DiagnosticoDetallePage({ params }: Props) {
         </p>
         {detail.diagnostic.status === "VALIDADO" && (
           <p className="mt-2 text-sm text-emerald-800">
-            Validado — pendiente de cotizar (Fase 4).
+            Validado —{" "}
+            <a href="/comercial/pendientes-cotizar" className="text-sygos-teal underline">
+              pendiente de cotizar
+            </a>
+            .
           </p>
         )}
       </div>

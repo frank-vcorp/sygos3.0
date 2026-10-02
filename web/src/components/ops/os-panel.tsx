@@ -46,7 +46,13 @@ export function OsActionsPanel({
         </button>
       )}
       {repairStatus === "REPARACION_TERMINADA" && (
-        <p className="text-sm text-emerald-800">Pendiente de cotizar precio (Fase 4).</p>
+        <p className="text-sm text-emerald-800">
+          Pendiente de cotizar precio —{" "}
+          <a href="/comercial/pendientes-cotizar" className="underline">
+            bandeja comercial
+          </a>
+          .
+        </p>
       )}
     </div>
   );

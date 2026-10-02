@@ -14,6 +14,14 @@ export function formatOsFolio(n: number): string {
   return `OS-${n}`;
 }
 
+export function formatQuoteFolio(n: number): string {
+  return `COT-${n}`;
+}
+
+export function formatSaleFolio(n: number): string {
+  return `VTA-${n}`;
+}
+
 /** Secuencia MOT global compartida SYSTRON ↔ Servomotores. */
 export async function nextGlobalMotFolio(): Promise<number> {
   const db = getDb();

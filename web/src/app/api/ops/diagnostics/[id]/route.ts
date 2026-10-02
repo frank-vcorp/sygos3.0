@@ -75,6 +75,24 @@ export async function PATCH(request: Request, { params }: Params) {
     if (!updated) {
       return NextResponse.json({ error: "No encontrado." }, { status: 404 });
     }
+    if (updated.status === "VALIDADO") {
+      const { ensureQuoteFromDiagnostic } = await import(
+        "@/server/commercial/quotes"
+      );
+      await ensureQuoteFromDiagnostic({
+        diagnosticId: id,
+        actorUserId: auth.actor.id,
+      });
+    }
+    if (body.warrantyDecision === "GARANTIA_NO_PROCEDENTE") {
+      const { ensureQuoteFromDiagnostic } = await import(
+        "@/server/commercial/quotes"
+      );
+      await ensureQuoteFromDiagnostic({
+        diagnosticId: id,
+        actorUserId: auth.actor.id,
+      });
+    }
     return NextResponse.json({ diagnostic: updated });
   } catch {
     return NextResponse.json({ error: "Solicitud inválida." }, { status: 400 });

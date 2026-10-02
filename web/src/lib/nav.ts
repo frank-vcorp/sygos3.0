@@ -13,6 +13,12 @@ export const appNavSections: NavSection[] = [
   {
     title: "Comercial",
     items: [
+      { label: "Panel ventas", href: "/comercial/panel" },
+      { label: "Pendientes de cotizar", href: "/comercial/pendientes-cotizar" },
+      { label: "Cotizaciones", href: "/comercial/cotizaciones" },
+      { label: "Ventas de equipo", href: "/comercial/ventas" },
+      { label: "Agenda", href: "/comercial/agenda" },
+      { label: "Metas", href: "/comercial/metas" },
       { label: "Clientes", href: "/comercial/clientes" },
       { label: "Prospectos", href: "/comercial/prospectos" },
     ],
@@ -29,7 +35,6 @@ export const appNavSections: NavSection[] = [
     title: "Operación",
     items: [
       { label: "Operación técnica", href: "/operacion/tecnica" },
-      { label: "Cotizaciones", href: "/inicio" },
       { label: "Inventario", href: "/operacion/inventario" },
       { label: "Refacciones", href: "/operacion/refacciones" },
       { label: "Compras y O.C.", href: "/inicio" },

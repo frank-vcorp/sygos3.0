@@ -792,7 +792,306 @@ export const sparePartRequests = pgTable("spare_part_requests", {
     .notNull(),
 });
 
+export const quoteTypeEnum = pgEnum("quote_type", [
+  "DIAGNOSTICO",
+  "REPARACION_SERVICIO",
+  "SERVICIO_CAMPO",
+  "VENTA_EQUIPO",
+]);
+
+export const quoteOriginEnum = pgEnum("quote_origin", [
+  "VENDEDOR",
+  "DIAGNOSTICO_VALIDADO",
+  "REPARACION_TERMINADA",
+  "GARANTIA_COBRAR",
+  "MOT_BASE_SERVOMOTORES",
+]);
+
+export const quoteStatusEnum = pgEnum("quote_status", [
+  "PENDIENTE_COTIZAR",
+  "PENDIENTE_DECISION",
+  "AUTORIZADA",
+  "AUTORIZADA_PENDIENTE_INGRESO",
+  "NO_AUTORIZADA",
+]);
+
+export const equipmentSaleStatusEnum = pgEnum("equipment_sale_status", [
+  "ABIERTA",
+  "PARCIAL",
+  "CERRADA",
+]);
+
+export const quotes = pgTable(
+  "quotes",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    companyId: uuid("company_id")
+      .notNull()
+      .references(() => companies.id, { onDelete: "cascade" }),
+    folioNumber: integer("folio_number").notNull(),
+    clientId: uuid("client_id")
+      .notNull()
+      .references(() => clients.id),
+    vendorUserId: uuid("vendor_user_id")
+      .notNull()
+      .references(() => users.id),
+    quoteType: quoteTypeEnum("quote_type").notNull(),
+    quoteOrigin: quoteOriginEnum("quote_origin").notNull(),
+    status: quoteStatusEnum("status").default("PENDIENTE_COTIZAR").notNull(),
+    diagnosticId: uuid("diagnostic_id").references(() => diagnostics.id),
+    workOrderId: uuid("work_order_id").references(() => workOrders.id),
+    equiId: uuid("equi_id").references(() => equiUnits.id),
+    motorId: uuid("motor_id").references(() => motors.id),
+    prelimEquipmentType: text("prelim_equipment_type"),
+    prelimBrand: text("prelim_brand"),
+    prelimModel: text("prelim_model"),
+    prelimSerial: text("prelim_serial"),
+    commercialReference: text("commercial_reference"),
+    complementNotes: text("complement_notes"),
+    repairBaseMxn: integer("repair_base_mxn"),
+    frozenIncrementPct: integer("frozen_increment_pct"),
+    subtotalMxn: integer("subtotal_mxn"),
+    discountPct: integer("discount_pct"),
+    discountMxn: integer("discount_mxn"),
+    priceBeforeIvaMxn: integer("price_before_iva_mxn"),
+    ivaMxn: integer("iva_mxn"),
+    totalMxn: integer("total_mxn"),
+    creditDays: integer("credit_days"),
+    linkedQuoteId: uuid("linked_quote_id"),
+    intercompanyBaseTotalMxn: integer("intercompany_base_total_mxn"),
+    pricedByUserId: uuid("priced_by_user_id").references(() => users.id),
+    pricedAt: timestamp("priced_at", { withTimezone: true }),
+    sentAt: timestamp("sent_at", { withTimezone: true }),
+    nextFollowUpAt: timestamp("next_follow_up_at", { withTimezone: true }),
+    decisionByUserId: uuid("decision_by_user_id").references(() => users.id),
+    decisionAt: timestamp("decision_at", { withTimezone: true }),
+    authorizedAt: timestamp("authorized_at", { withTimezone: true }),
+    createdByActorUserId: uuid("created_by_actor_user_id")
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("quotes_company_folio_unique").on(t.companyId, t.folioNumber),
+    uniqueIndex("quotes_diagnostic_unique").on(t.diagnosticId),
+    uniqueIndex("quotes_work_order_unique").on(t.workOrderId),
+  ],
+);
+
+export const quoteLines = pgTable("quote_lines", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  quoteId: uuid("quote_id")
+    .notNull()
+    .references(() => quotes.id, { onDelete: "cascade" }),
+  sortOrder: integer("sort_order").default(0).notNull(),
+  concept: text("concept").notNull(),
+  quantity: integer("quantity").default(1).notNull(),
+  unitPriceMxn: integer("unit_price_mxn"),
+  lineAuthorized: boolean("line_authorized"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const quoteContactRecipients = pgTable(
+  "quote_contact_recipients",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    quoteId: uuid("quote_id")
+      .notNull()
+      .references(() => quotes.id, { onDelete: "cascade" }),
+    contactId: uuid("contact_id")
+      .notNull()
+      .references(() => clientContacts.id, { onDelete: "cascade" }),
+  },
+  (t) => [
+    uniqueIndex("quote_contact_recipients_unique").on(t.quoteId, t.contactId),
+  ],
+);
+
+export const quotePriceRevisions = pgTable("quote_price_revisions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  quoteId: uuid("quote_id")
+    .notNull()
+    .references(() => quotes.id, { onDelete: "cascade" }),
+  actorUserId: uuid("actor_user_id")
+    .notNull()
+    .references(() => users.id),
+  note: text("note"),
+  subtotalMxn: integer("subtotal_mxn"),
+  totalMxn: integer("total_mxn"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const equipmentSales = pgTable(
+  "equipment_sales",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    companyId: uuid("company_id")
+      .notNull()
+      .references(() => companies.id, { onDelete: "cascade" }),
+    folioNumber: integer("folio_number").notNull(),
+    quoteId: uuid("quote_id")
+      .notNull()
+      .references(() => quotes.id),
+    clientId: uuid("client_id")
+      .notNull()
+      .references(() => clients.id),
+    status: equipmentSaleStatusEnum("status").default("ABIERTA").notNull(),
+    createdByActorUserId: uuid("created_by_actor_user_id")
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("equipment_sales_company_folio_unique").on(
+      t.companyId,
+      t.folioNumber,
+    ),
+  ],
+);
+
+export const equipmentSaleLines = pgTable("equipment_sale_lines", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  saleId: uuid("sale_id")
+    .notNull()
+    .references(() => equipmentSales.id, { onDelete: "cascade" }),
+  quoteLineId: uuid("quote_line_id")
+    .notNull()
+    .references(() => quoteLines.id),
+  quantitySold: integer("quantity_sold").notNull(),
+  quantityReceived: integer("quantity_received").default(0).notNull(),
+  quantityDelivered: integer("quantity_delivered").default(0).notNull(),
+});
+
+export const commercialActivityCategories = pgTable(
+  "commercial_activity_categories",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    companyId: uuid("company_id")
+      .notNull()
+      .references(() => companies.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    countsForGoals: boolean("counts_for_goals").default(true).notNull(),
+    isActive: boolean("is_active").default(true).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("commercial_activity_categories_company_name").on(
+      t.companyId,
+      t.name,
+    ),
+  ],
+);
+
+export const commercialActivities = pgTable("commercial_activities", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  companyId: uuid("company_id")
+    .notNull()
+    .references(() => companies.id, { onDelete: "cascade" }),
+  ownerUserId: uuid("owner_user_id")
+    .notNull()
+    .references(() => users.id),
+  categoryId: uuid("category_id").references(
+    () => commercialActivityCategories.id,
+  ),
+  categoryLabel: text("category_label"),
+  clientId: uuid("client_id").references(() => clients.id),
+  prospectId: uuid("prospect_id").references(() => prospects.id),
+  title: text("title").notNull(),
+  notes: text("notes"),
+  evidenceUrl: text("evidence_url"),
+  occurredAt: timestamp("occurred_at", { withTimezone: true }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const commercialGoalTypes = pgTable(
+  "commercial_goal_types",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    companyId: uuid("company_id")
+      .notNull()
+      .references(() => companies.id, { onDelete: "cascade" }),
+    code: text("code").notNull(),
+    label: text("label").notNull(),
+    sourceKind: text("source_kind").default("ACTIVITIES").notNull(),
+    isActive: boolean("is_active").default(true).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("commercial_goal_types_company_code").on(t.companyId, t.code),
+  ],
+);
+
+export const commercialGoalTargets = pgTable(
+  "commercial_goal_targets",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    companyId: uuid("company_id")
+      .notNull()
+      .references(() => companies.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id),
+    goalTypeId: uuid("goal_type_id")
+      .notNull()
+      .references(() => commercialGoalTypes.id, { onDelete: "cascade" }),
+    year: integer("year").notNull(),
+    month: integer("month").notNull(),
+    targetValue: integer("target_value").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("commercial_goal_targets_unique").on(
+      t.companyId,
+      t.userId,
+      t.goalTypeId,
+      t.year,
+      t.month,
+    ),
+  ],
+);
+
+export const clientFirstOperations = pgTable("client_first_operations", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  companyId: uuid("company_id")
+    .notNull()
+    .references(() => companies.id, { onDelete: "cascade" }),
+  clientId: uuid("client_id")
+    .notNull()
+    .references(() => clients.id),
+  attributedUserId: uuid("attributed_user_id")
+    .notNull()
+    .references(() => users.id),
+  quoteId: uuid("quote_id").references(() => quotes.id),
+  occurredAt: timestamp("occurred_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
 export type UserRole = (typeof userRoleEnum.enumValues)[number];
 export type IntegrationProvider =
   (typeof integrationProviderEnum.enumValues)[number];
 export type ProspectStatus = (typeof prospectStatusEnum.enumValues)[number];
+export type QuoteType = (typeof quoteTypeEnum.enumValues)[number];
+export type QuoteStatus = (typeof quoteStatusEnum.enumValues)[number];
