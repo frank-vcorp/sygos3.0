@@ -11,6 +11,8 @@ import { formatOsFolio, nextFolioValue } from "@/server/masters/folios";
 import { getQuoteDetail } from "@/server/commercial/quotes";
 import { createServiceAttention } from "@/server/ops/attentions";
 import type { CompanySlug } from "@/lib/company";
+import { resolveCompanyIds } from "@/server/assets/context";
+import type { JourneyHint } from "@/server/journey/types";
 
 /** Tras autorización comercial: abrir OS o atención técnica según tipo (discovery §4–5). */
 export async function continueJourneyAfterQuoteAuthorized(params: {
@@ -25,6 +27,27 @@ export async function continueJourneyAfterQuoteAuthorized(params: {
   if (q.status !== "AUTORIZADA") return null;
   if (q.quoteType === "VENTA_EQUIPO" || q.quoteType === "SERVICIO_CAMPO") {
     return { kind: "COMMERCIAL_ONLY" as const };
+  }
+
+  const ids = await resolveCompanyIds();
+  if (q.quoteOrigin === "MOT_BASE_SERVOMOTORES" && q.linkedQuoteId) {
+    return { kind: "INTERCOMPANY_SYSTRON_MIRROR" as const };
+  }
+  if (
+    q.quoteOrigin === "MOT_BASE_SERVOMOTORES" &&
+    params.companyId === ids.servomotoresId
+  ) {
+    return { kind: "INTERCOMPANY_SM_BASE" as const };
+  }
+  if (q.motorId && params.companyId === ids.systronId && q.diagnosticId) {
+    const [diag] = await getDb()
+      .select({ companyId: diagnostics.companyId })
+      .from(diagnostics)
+      .where(eq(diagnostics.id, q.diagnosticId))
+      .limit(1);
+    if (diag?.companyId === ids.servomotoresId) {
+      return { kind: "INTERCOMPANY_SYSTRON_READ_ONLY" as const };
+    }
   }
 
   if (q.diagnosticId) {
@@ -225,10 +248,25 @@ async function ensureTechnicalEpisodeFromStandaloneQuote(params: {
 export async function getQuoteJourneyHint(params: {
   companyId: string;
   quoteId: string;
-}) {
+}): Promise<JourneyHint | null> {
   const detail = await getQuoteDetail(params.companyId, params.quoteId);
   if (!detail) return null;
   const q = detail.quote;
+  const db = getDb();
+  const ids = await resolveCompanyIds();
+
+  if (q.quoteOrigin === "MOT_BASE_SERVOMOTORES" && q.status === "PENDIENTE_COTIZAR") {
+    return {
+      message: "Gerente SM / CEO SM: precio base hacia SYSTRON (intercompañía).",
+      href: "/comercial/pendientes-cotizar",
+    };
+  }
+  if (q.linkedQuoteId && q.status === "PENDIENTE_COTIZAR") {
+    return {
+      message: "CEO SYSTRON: precio final al cliente (base SM ya capturada).",
+      href: `/comercial/cotizaciones/${q.id}`,
+    };
+  }
 
   if (q.status === "PENDIENTE_COTIZAR") {
     return {
@@ -251,27 +289,77 @@ export async function getQuoteJourneyHint(params: {
   }
   if (q.status === "AUTORIZADA" && q.quoteType === "SERVICIO_CAMPO") {
     return {
-      message: "Servicio en campo autorizado — facturación/remisión si aplica.",
-      href: null,
+      message: "Servicio en campo autorizado — solicitar factura/remisión.",
+      href: "/administracion/facturacion/pendientes",
+    };
+  }
+  if (q.status === "AUTORIZADA" && q.quoteType === "VENTA_EQUIPO") {
+    const { equipmentSales } = await import("@/db/schema");
+    const [sale] = await db
+      .select({ id: equipmentSales.id })
+      .from(equipmentSales)
+      .where(eq(equipmentSales.quoteId, q.id))
+      .limit(1);
+    return {
+      message: sale
+        ? "Venta generada — recepción/entrega de líneas."
+        : "Autorice líneas para crear la Venta.",
+      href: sale ? `/comercial/ventas/${sale.id}` : null,
+    };
+  }
+  if (q.status === "AUTORIZADA" && q.quoteOrigin === "MOT_BASE_SERVOMOTORES") {
+    return {
+      message:
+        params.companyId === ids.systronId
+          ? "Decisión propagada a SM — factura intercompañía si aplica."
+          : "Operación técnica continúa en SM; SYSTRON fija precio final.",
+      href:
+        params.companyId === ids.systronId
+          ? "/administracion/cxp"
+          : "/paneles/gerente-sm",
     };
   }
   if (q.status === "AUTORIZADA" && q.diagnosticId) {
-    const db = getDb();
     const [wo] = await db
-      .select({ id: workOrders.id, folioNumber: workOrders.folioNumber })
+      .select({ id: workOrders.id })
       .from(workOrders)
       .where(eq(workOrders.diagnosticId, q.diagnosticId))
       .limit(1);
     if (wo) {
       return {
-        message: "Reparación/OS ligada al diagnóstico.",
+        message: "Reparación/OS ligada — ejecutar y facturar al cierre.",
         href: `/operacion/os/${wo.id}`,
       };
     }
     return {
-      message: "Cotización autorizada — generando OS de reparación… recargue.",
+      message: "Cotización autorizada — OS de reparación en curso.",
       href: `/operacion/diagnosticos/${q.diagnosticId}`,
     };
+  }
+  if (q.status === "AUTORIZADA") {
+    if (q.equiId || q.motorId) {
+      const [wo] = await db
+        .select({ id: workOrders.id })
+        .from(workOrders)
+        .where(
+          and(
+            eq(workOrders.companyId, params.companyId),
+            q.equiId ? eq(workOrders.equiId, q.equiId) : eq(workOrders.motorId, q.motorId!),
+          ),
+        )
+        .limit(1);
+      return {
+        message: "Autorizada — técnica/fiscal según tipo.",
+        href: wo ? `/operacion/os/${wo.id}` : "/operacion/tecnica",
+      };
+    }
+    return {
+      message: "Autorizada — solicitar factura/remisión.",
+      href: "/administracion/facturacion/pendientes",
+    };
+  }
+  if (q.status === "NO_AUTORIZADA") {
+    return { message: "Cotización no autorizada — solo consulta histórica.", href: null };
   }
   return null;
 }

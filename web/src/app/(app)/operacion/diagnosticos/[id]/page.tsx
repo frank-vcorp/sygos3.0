@@ -15,6 +15,8 @@ import { listSuppliers } from "@/server/masters/suppliers";
 import { getAuthContext } from "@/server/auth/session";
 import { canSeeTechnicalOps } from "@/server/rbac/ops";
 import { isSuperAdmin } from "@/server/rbac/roles";
+import { JourneyPanel } from "@/components/journey/journey-panel";
+import { getDiagnosticJourneyHint } from "@/server/journey/diagnostic-handoffs";
 
 export const dynamic = "force-dynamic";
 
@@ -43,6 +45,15 @@ export default async function DiagnosticoDetallePage({ params }: Props) {
     auth.effective.role === "CEO" ||
     auth.effective.role === "ADMINISTRADOR" ||
     isSuperAdmin(auth.effective.role);
+
+  const journeyHint = await getDiagnosticJourneyHint({
+    diagnosticId: id,
+    companyId: detail.diagnostic.companyId,
+    status: detail.diagnostic.status,
+    assignedUserId: detail.diagnostic.assignedUserId,
+    attentionType: detail.attention?.attentionType,
+    warrantyDecision: detail.diagnostic.warrantyDecision,
+  });
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -76,16 +87,8 @@ export default async function DiagnosticoDetallePage({ params }: Props) {
               : ""}
           </p>
         )}
-        {detail.diagnostic.status === "VALIDADO" && (
-          <p className="mt-2 text-sm text-emerald-800">
-            Validado —{" "}
-            <Link href="/comercial/pendientes-cotizar" className="text-sygos-teal underline">
-              pendiente de cotizar
-            </Link>
-            .
-          </p>
-        )}
       </div>
+      <JourneyPanel hint={journeyHint} />
       <WarrantyGerenteActions
         diagnosticId={id}
         status={detail.diagnostic.status}

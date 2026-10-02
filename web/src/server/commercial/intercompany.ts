@@ -111,6 +111,17 @@ export async function syncIntercompanyDecision(params: {
       updatedAt: new Date(),
     })
     .where(eq(quotes.id, peerId));
+
+  if (params.authorized && peer) {
+    const { continueJourneyAfterQuoteAuthorized } = await import(
+      "@/server/commercial/quote-handoffs"
+    );
+    await continueJourneyAfterQuoteAuthorized({
+      companyId: peer.companyId,
+      quoteId: peer.id,
+      actorUserId: params.actorUserId,
+    });
+  }
 }
 
 export async function createServomotoresBaseQuoteForMotor(params: {

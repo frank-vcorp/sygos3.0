@@ -13,6 +13,8 @@ import { getMotIntercompanySubtotalHint } from "@/server/billing/fiscal-document
 import { canEmitFiscalDocument } from "@/server/rbac/billing";
 import { canManageQuotePricing } from "@/server/rbac/commercial";
 import { canOperateServomotoresCustody, canSeeMotors } from "@/server/rbac/assets";
+import { JourneyPanel } from "@/components/journey/journey-panel";
+import { getMotorJourneyHint } from "@/server/journey/asset-handoffs";
 
 export const dynamic = "force-dynamic";
 
@@ -43,6 +45,13 @@ export default async function MotDetailPage({ params }: Props) {
   const mirroredBitacora =
     slug === "SYSTRON" ? await listBitacoraForMotorReadonly(id) : [];
 
+  const journeyHint = await getMotorJourneyHint({
+    motorId: id,
+    activeCompanyId: auth.activeCompany.id,
+    origin: detail.motor.origin,
+    servomotoresIntakeStatus: detail.motor.servomotoresIntakeStatus,
+  });
+
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <Link href="/activos/mot" className="text-sm text-sky-800 hover:underline">
@@ -58,6 +67,7 @@ export default async function MotDetailPage({ params }: Props) {
           {detail.motor.servomotoresIntakeStatus}
         </p>
       </div>
+      <JourneyPanel hint={journeyHint} />
       <div className="flex flex-wrap gap-2">
         {slug === "SERVOMOTORES" &&
           detail.motor.origin === "SYSTRON" &&

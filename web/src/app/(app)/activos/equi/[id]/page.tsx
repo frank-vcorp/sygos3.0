@@ -6,6 +6,8 @@ import { getEquiDetail } from "@/server/assets/equi";
 import { listPhysicalMovements } from "@/server/assets/custody";
 import { getAuthContext } from "@/server/auth/session";
 import { canOperateSystronWarehouse, canSeeEqui } from "@/server/rbac/assets";
+import { JourneyPanel } from "@/components/journey/journey-panel";
+import { getEquiJourneyHint } from "@/server/journey/asset-handoffs";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +30,11 @@ export default async function EquiDetailPage({ params }: Props) {
   });
 
   const canMove = canOperateSystronWarehouse(auth.effective.role, slug);
+  const journeyHint = await getEquiJourneyHint({
+    equiId: id,
+    companyId: auth.activeCompany.id,
+    custodyStatus: detail.equi.custodyStatus,
+  });
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -41,6 +48,7 @@ export default async function EquiDetailPage({ params }: Props) {
         </p>
         <p className="text-sm text-slate-500">Custodia: {detail.equi.custodyStatus}</p>
       </div>
+      <JourneyPanel hint={journeyHint} />
       {canMove && (
         <MovementActions
           entityKind="equi"

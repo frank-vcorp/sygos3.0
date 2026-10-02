@@ -5,6 +5,8 @@ import { getWorkOrder } from "@/server/assets/work-orders";
 import { listBitacora } from "@/server/ops/bitacora";
 import { getAuthContext } from "@/server/auth/session";
 import { canSeeTechnicalOps } from "@/server/rbac/ops";
+import { JourneyPanel } from "@/components/journey/journey-panel";
+import { getWorkOrderJourneyHint } from "@/server/journey/work-order-handoffs";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +22,11 @@ export default async function OsDetallePage({ params }: Props) {
   if (!detail) notFound();
 
   const entries = await listBitacora({ workOrderId: id });
+  const journeyHint = await getWorkOrderJourneyHint({
+    workOrderId: id,
+    companyId: auth.activeCompany.id,
+    repairStatus: detail.workOrder.repairStatus,
+  });
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -30,6 +37,7 @@ export default async function OsDetallePage({ params }: Props) {
         <h1 className="text-2xl font-semibold">{detail.workOrder.folio}</h1>
         <p className="text-sm text-slate-600">Estado: {detail.workOrder.repairStatus}</p>
       </div>
+      <JourneyPanel hint={journeyHint} />
       <OsActionsPanel workOrderId={id} repairStatus={detail.workOrder.repairStatus} />
       <section className="rounded-xl border bg-white p-4">
         <h2 className="text-sm font-semibold">Solicitudes refacción</h2>

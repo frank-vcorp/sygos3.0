@@ -49,19 +49,11 @@ export async function PATCH(request: Request, { params }: Params) {
     const updated = await updateWorkOrderRepair({
       companyId: auth.activeCompany.id,
       workOrderId: id,
+      actorUserId: auth.actor.id,
       patch: body,
     });
     if (!updated) {
       return NextResponse.json({ error: "No encontrado." }, { status: 404 });
-    }
-    if (updated.repairStatus === "REPARACION_TERMINADA") {
-      const { ensureQuoteFromWorkOrder } = await import(
-        "@/server/commercial/quotes"
-      );
-      await ensureQuoteFromWorkOrder({
-        workOrderId: id,
-        actorUserId: auth.actor.id,
-      });
     }
     return NextResponse.json({ workOrder: updated });
   } catch {

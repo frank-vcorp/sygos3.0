@@ -9,6 +9,8 @@ import { formatDirectPurchaseFolio } from "@/server/masters/folios";
 import { getDirectPurchase } from "@/server/purchases/direct";
 import { getAuthContext } from "@/server/auth/session";
 import { canProcessPurchases, canSeePurchasesModule } from "@/server/rbac/purchases";
+import { JourneyPanel } from "@/components/journey/journey-panel";
+import { getDirectPurchaseJourneyHint } from "@/server/journey/purchase-handoffs";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +27,7 @@ export default async function CompraDirectaDetallePage({ params }: Props) {
 
   const accounts = await ensureDefaultFinancialAccounts(auth.activeCompany.id);
   const canProcess = canProcessPurchases(auth.effective.role);
+  const journeyHint = getDirectPurchaseJourneyHint({ status: purchase.status });
 
   return (
     <div className="mx-auto max-w-xl space-y-4">
@@ -35,6 +38,7 @@ export default async function CompraDirectaDetallePage({ params }: Props) {
         {formatDirectPurchaseFolio(purchase.folioNumber)}
       </h1>
       <p className="text-sm text-slate-600">{purchase.concept}</p>
+      <JourneyPanel hint={journeyHint} />
       <p className="text-sm">
         {purchase.status.replace(/_/g, " ")} · {purchase.amountMxn} MXN ·{" "}
         {purchase.paymentTerms}

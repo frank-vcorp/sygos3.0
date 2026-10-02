@@ -341,6 +341,18 @@ export async function updateDiagnostic(params: {
         actorUserId: params.actorUserId,
       });
     }
+    if (
+      updated.status === "VALIDADO" ||
+      params.patch.warrantyDecision === "GARANTIA_NO_PROCEDENTE"
+    ) {
+      const { ensureQuoteFromDiagnostic } = await import(
+        "@/server/commercial/quotes"
+      );
+      await ensureQuoteFromDiagnostic({
+        diagnosticId: params.diagnosticId,
+        actorUserId: params.actorUserId,
+      });
+    }
   }
 
   return updated;

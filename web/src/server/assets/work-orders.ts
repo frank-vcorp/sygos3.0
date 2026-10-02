@@ -72,6 +72,7 @@ export async function listWorkOrders(companyId: string) {
 export async function updateWorkOrderRepair(params: {
   companyId: string;
   workOrderId: string;
+  actorUserId?: string;
   patch: Partial<{
     repairStatus: (typeof workOrders.$inferSelect)["repairStatus"];
     assignedUserId: string;
@@ -89,6 +90,13 @@ export async function updateWorkOrderRepair(params: {
       ),
     )
     .returning();
+  if (updated?.repairStatus === "REPARACION_TERMINADA") {
+    const { ensureQuoteFromWorkOrder } = await import("@/server/commercial/quotes");
+    await ensureQuoteFromWorkOrder({
+      workOrderId: updated.id,
+      actorUserId: params.actorUserId ?? updated.createdByActorUserId,
+    });
+  }
   return updated ?? null;
 }
 

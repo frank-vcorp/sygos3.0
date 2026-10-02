@@ -9,6 +9,8 @@ import {
   canEmitFiscalDocument,
   canSeeBillingModule,
 } from "@/server/rbac/billing";
+import { JourneyPanel } from "@/components/journey/journey-panel";
+import { getFiscalDocumentJourneyHint } from "@/server/journey/fiscal-handoffs";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +24,11 @@ export default async function FiscalDocumentPage({ params }: Props) {
   const { id } = await params;
   const detail = await getFiscalDocumentDetail(auth.activeCompany.id, id);
   if (!detail) redirect("/administracion/facturacion");
+
+  const journeyHint = getFiscalDocumentJourneyHint({
+    status: detail.doc.status,
+    docKind: detail.doc.docKind,
+  });
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -37,6 +44,7 @@ export default async function FiscalDocumentPage({ params }: Props) {
           </span>
         ) : null}
       </p>
+      <JourneyPanel hint={journeyHint} />
       {detail.doc.fiscalRetryCount > 0 && (
         <p className="text-xs text-slate-500">
           Reintentos fiscales: {detail.doc.fiscalRetryCount}

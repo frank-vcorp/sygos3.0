@@ -3,6 +3,8 @@ import { SaleLineActions } from "@/components/commercial/sale-line-actions";
 import { getEquipmentSaleDetail } from "@/server/commercial/sales";
 import { getAuthContext } from "@/server/auth/session";
 import { canSeeCommercialModule } from "@/server/rbac/commercial";
+import { JourneyPanel } from "@/components/journey/journey-panel";
+import { getEquipmentSaleJourneyHint } from "@/server/journey/sale-handoffs";
 
 export const dynamic = "force-dynamic";
 
@@ -17,10 +19,23 @@ export default async function VentaDetallePage({ params }: Props) {
   const detail = await getEquipmentSaleDetail(auth.activeCompany.id, id);
   if (!detail) redirect("/comercial/ventas");
 
+  const hasPendingReceive = detail.lines.some(
+    (l) => l.line.quantityReceived < l.line.quantitySold,
+  );
+  const hasPendingDelivery = detail.lines.some(
+    (l) => l.line.quantityDelivered < l.line.quantityReceived,
+  );
+  const journeyHint = getEquipmentSaleJourneyHint({
+    status: detail.sale.status,
+    hasPendingReceive,
+    hasPendingDelivery,
+  });
+
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <h1 className="text-2xl font-semibold">{detail.sale.folio}</h1>
       <p className="text-sm text-slate-500">Estado: {detail.sale.status}</p>
+      <JourneyPanel hint={journeyHint} />
       <ul className="space-y-4">
         {detail.lines.map(({ line, concept }) => (
           <li

@@ -3,11 +3,13 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { JourneyPanel } from "@/components/journey/journey-panel";
+import type { JourneyHint } from "@/server/journey/types";
 
 export function QuoteJourneyPanel(props: {
   quoteId: string;
   status: string;
-  hint: { message: string; href: string | null } | null;
+  hint: JourneyHint | null;
   clientId: string;
   canLinkAsset: boolean;
   equiOptions: { id: string; label: string }[];
@@ -49,22 +51,7 @@ export function QuoteJourneyPanel(props: {
   }
 
   return (
-    <section className="rounded-xl border border-amber-200 bg-amber-50/80 p-4 text-sm">
-      <h2 className="font-medium text-amber-950">Siguiente en el recorrido</h2>
-      {props.hint && (
-        <p className="mt-2 text-amber-900">
-          {props.hint.message}
-          {props.hint.href && (
-            <>
-              {" "}
-              <Link href={props.hint.href} className="font-medium text-sygos-teal underline">
-                Ir →
-              </Link>
-            </>
-          )}
-        </p>
-      )}
-
+    <JourneyPanel hint={props.hint}>
       {props.status === "AUTORIZADA_PENDIENTE_INGRESO" && props.canLinkAsset && (
         <div className="mt-3 space-y-2">
           <p className="text-xs text-amber-800">
@@ -149,6 +136,6 @@ export function QuoteJourneyPanel(props: {
             </button>
           </div>
         )}
-    </section>
+    </JourneyPanel>
   );
 }

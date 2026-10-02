@@ -13,6 +13,8 @@ import {
   canProcessPurchases,
   canSeePurchasesModule,
 } from "@/server/rbac/purchases";
+import { JourneyPanel } from "@/components/journey/journey-panel";
+import { getPurchaseOrderJourneyHint } from "@/server/journey/purchase-handoffs";
 
 export const dynamic = "force-dynamic";
 
@@ -30,6 +32,7 @@ export default async function OcDetallePage({ params }: Props) {
   const accounts = await ensureDefaultFinancialAccounts(auth.activeCompany.id);
   const canCeo = canAuthorizePurchaseOrder(auth.effective.role);
   const canCoord = canProcessPurchases(auth.effective.role);
+  const journeyHint = getPurchaseOrderJourneyHint({ status: order.status });
 
   return (
     <div className="mx-auto max-w-xl space-y-4">
@@ -38,6 +41,7 @@ export default async function OcDetallePage({ params }: Props) {
       </Link>
       <h1 className="text-xl font-semibold">{formatPurchaseOrderFolio(order.folioNumber)}</h1>
       <p className="text-sm">{order.concept}</p>
+      <JourneyPanel hint={journeyHint} />
       <p className="text-sm text-slate-600">
         {order.status.replace(/_/g, " ")} · autorizado {order.authorizedAmountMxn} MXN
       </p>
