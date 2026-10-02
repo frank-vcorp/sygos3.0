@@ -70,6 +70,10 @@ export default async function PanelCeoPage() {
       </div>
 
       <PanelSection title="Decisiones · O.C. pendientes de autorización">
+        <PanelRow
+          href="/operacion/oc?vista=pendientes-ceo"
+          label="Ver bandeja completa →"
+        />
         {panel.purchaseOrders.map((o) => (
           <PanelRow
             key={o.id}
@@ -116,7 +120,7 @@ export default async function PanelCeoPage() {
           <PanelRow
             key={v.id}
             href="/capital-humano/vacaciones"
-            label={`${v.weekdayDays} d · ${v.status}`}
+            label={`${v.employeeName ?? "Colaborador"} · ${v.weekdayDays} d · ${v.status}`}
           />
         ))}
       </PanelSection>

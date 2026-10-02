@@ -30,7 +30,8 @@ export default async function ReportesPage() {
       <div>
         <h1 className="text-2xl font-semibold">Reportes · {auth.activeCompany.name}</h1>
         <p className="text-sm text-slate-500">
-          Periodo {extended.monthKey} · sin consolidado entre empresas.
+          §10.8 — indicadores por empresa activa ({extended.monthKey}); no hay consolidado
+          intercompañía ni cierre fiscal global.
         </p>
       </div>
 

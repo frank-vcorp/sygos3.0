@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { employees, vacationRequests } from "@/db/schema";
 import { markVacationDaysOnCalendar } from "@/server/hr/attendance-daily";
@@ -121,10 +121,22 @@ export async function approveVacationRequest(params: {
   return updated;
 }
 
-export async function listVacationRequests(companyId: string) {
+export async function listVacationRequests(
+  companyId: string,
+  opts?: { pendingOnly?: boolean },
+) {
   const db = getDb();
+  const conditions = [eq(vacationRequests.companyId, companyId)];
+  if (opts?.pendingOnly) {
+    conditions.push(eq(vacationRequests.status, "PENDIENTE"));
+  }
   return db
-    .select()
+    .select({
+      request: vacationRequests,
+      employeeName: employees.legalName,
+    })
     .from(vacationRequests)
-    .where(eq(vacationRequests.companyId, companyId));
+    .innerJoin(employees, eq(employees.id, vacationRequests.employeeId))
+    .where(and(...conditions))
+    .orderBy(desc(vacationRequests.createdAt));
 }

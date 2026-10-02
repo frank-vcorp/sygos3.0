@@ -9,6 +9,7 @@ import { getAuthContext } from "@/server/auth/session";
 import {
   canAuthorizePurchaseOrder,
   canManagePurchaseOrders,
+  canProcessPurchases,
   canSeePurchasesModule,
 } from "@/server/rbac/purchases";
 
@@ -22,24 +23,40 @@ export default async function OcListPage({ searchParams }: Props) {
   if (!canSeePurchasesModule(auth.effective.role)) redirect("/inicio");
 
   const { vista } = await searchParams;
-  const activeView = vista === "pendientes-ceo" ? "pendientes-ceo" : "todas";
+  const activeView =
+    vista === "pendientes-ceo"
+      ? "pendientes-ceo"
+      : vista === "pendientes-procesar"
+        ? "pendientes-procesar"
+        : "todas";
   const showCeoTab = canAuthorizePurchaseOrder(auth.effective.role);
+  const showProcessTab = canProcessPurchases(auth.effective.role);
   if (activeView === "pendientes-ceo" && !showCeoTab) {
+    redirect("/operacion/oc");
+  }
+  if (activeView === "pendientes-procesar" && !showProcessTab) {
     redirect("/operacion/oc");
   }
 
   const rows = await listPurchaseOrders(auth.activeCompany.id, {
     pendingCeoOnly: activeView === "pendientes-ceo",
+    pendingProcessOnly: activeView === "pendientes-procesar",
   });
 
   const description =
     activeView === "pendientes-ceo"
       ? "Bandeja O.C. — pendientes de autorización CEO (§6.2)."
-      : "Órdenes de compra · autorización CEO · procesamiento Coordinación.";
+      : activeView === "pendientes-procesar"
+        ? "Bandeja O.C. — Coordinación procesa → egreso o CxP 1:1."
+        : "Órdenes de compra · autorización CEO · procesamiento Coordinación.";
 
   return (
     <div className="space-y-4">
-      <OcListTabs active={activeView} showCeoTab={showCeoTab} />
+      <OcListTabs
+        active={activeView}
+        showCeoTab={showCeoTab}
+        showProcessTab={showProcessTab}
+      />
       <ListShell
         title="Órdenes de compra"
         description={description}

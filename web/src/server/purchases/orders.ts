@@ -16,12 +16,14 @@ function initialPoStatus(creatorRole: UserRole) {
 
 export async function listPurchaseOrders(
   companyId: string,
-  opts?: { pendingCeoOnly?: boolean },
+  opts?: { pendingCeoOnly?: boolean; pendingProcessOnly?: boolean },
 ) {
   const db = getDb();
   const conditions = [eq(purchaseOrders.companyId, companyId)];
   if (opts?.pendingCeoOnly) {
     conditions.push(eq(purchaseOrders.status, "PENDIENTE_AUTORIZACION"));
+  } else if (opts?.pendingProcessOnly) {
+    conditions.push(eq(purchaseOrders.status, "PENDIENTE_PROCESAR"));
   }
   return db
     .select({

@@ -103,6 +103,10 @@ export default async function PanelCoordPage() {
       </PanelSection>
 
       <PanelSection title="O.C. autorizadas por procesar">
+        <PanelRow
+          href="/operacion/oc?vista=pendientes-procesar"
+          label="Ver bandeja completa →"
+        />
         {panel.purchaseOrdersToProcess.map(({ order: o }) => (
           <PanelRow
             key={o.id}

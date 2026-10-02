@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { IntercompanyPaymentForm } from "@/components/billing/intercompany-payment-form";
 import { PayApForm } from "@/components/finance/finance-forms";
+import { ListShell } from "@/components/masters/list-shell";
 import type { CompanySlug } from "@/lib/company";
 import { listPayables } from "@/server/billing/ar-ap";
 import { formatMxn } from "@/server/commercial/money";
@@ -24,11 +25,11 @@ export default async function CxpPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Cuentas por pagar</h1>
-      <p className="text-sm text-slate-500">
-        Compras/O.C. a crédito, intercompañía y obligaciones con proveedor.
-      </p>
-      <table className="min-w-full rounded-xl border bg-white text-sm shadow-sm">
+      <ListShell
+        title="Cuentas por pagar"
+        description="§8.2 — O.C./compra a crédito, intercompañía SM→SYSTRON; pago 1:1 con egreso."
+      >
+      <table className="min-w-full text-sm">
         <thead className="border-b bg-slate-50 text-xs uppercase text-slate-500">
           <tr>
             <th className="px-4 py-3 text-left">Proveedor</th>
@@ -82,6 +83,7 @@ export default async function CxpPage() {
           )}
         </tbody>
       </table>
+      </ListShell>
     </div>
   );
 }

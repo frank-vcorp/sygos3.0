@@ -86,7 +86,9 @@ export async function buildCeoPanel(companyId: string) {
 
   return {
     purchaseOrders: ocPending,
-    vacations: vacations.filter((v) => v.status === "PENDIENTE"),
+    vacations: vacations
+      .filter(({ request }) => request.status === "PENDIENTE")
+      .map(({ request, employeeName }) => ({ ...request, employeeName })),
     overtime,
     quotesPendingPricing: pricing,
     payrollDraft,
