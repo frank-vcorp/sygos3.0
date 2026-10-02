@@ -29,6 +29,13 @@
       "when": 1790898591695,
       "tag": "0003_free_randall_flagg",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790904192167,
+      "tag": "0004_curly_the_stranger",
+      "breakpoints": true
     }
   ]
 }

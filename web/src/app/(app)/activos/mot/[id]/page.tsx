@@ -5,6 +5,7 @@ import type { CompanySlug } from "@/lib/company";
 import { listPhysicalMovements } from "@/server/assets/custody";
 import { resolveCompanyIds } from "@/server/assets/context";
 import { getMotorDetail } from "@/server/assets/motors";
+import { listBitacoraForMotorReadonly } from "@/server/ops/diagnostics";
 import { getAuthContext } from "@/server/auth/session";
 import { canOperateServomotoresCustody, canSeeMotors } from "@/server/rbac/assets";
 
@@ -30,6 +31,8 @@ export default async function MotDetailPage({ params }: Props) {
   });
 
   const canMove = canOperateServomotoresCustody(auth.effective.role, slug);
+  const mirroredBitacora =
+    slug === "SYSTRON" ? await listBitacoraForMotorReadonly(id) : [];
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -58,6 +61,18 @@ export default async function MotDetailPage({ params }: Props) {
             { value: "DEFINITIVE_EXIT", label: "Egreso definitivo" },
           ]}
         />
+      )}
+      {mirroredBitacora.length > 0 && (
+        <section className="rounded-xl border bg-white p-4">
+          <h2 className="text-sm font-semibold">Bitácora Servomotores (solo lectura)</h2>
+          <ul className="mt-3 divide-y text-sm">
+            {mirroredBitacora.map((e, i) => (
+              <li key={i} className="py-2">
+                {e.body} — {e.authorName}
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
       <section className="rounded-xl border bg-white p-4">
         <h2 className="text-sm font-semibold">Historial físico (Servomotores)</h2>

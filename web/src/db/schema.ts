@@ -317,6 +317,7 @@ export const equiCustodyStatusEnum = pgEnum("equi_custody_status", [
   "IN_CUSTODY",
   "OUT",
   "TRIAL_OUT",
+  "AT_EXTERNAL_VENDOR",
 ]);
 
 export const motorOriginEnum = pgEnum("motor_origin", [
@@ -340,6 +341,8 @@ export const physicalMovementTypeEnum = pgEnum("physical_movement_type", [
   "DEFINITIVE_EXIT",
   "INGRESO",
   "EGRESO",
+  "EXTERNAL_OUT",
+  "EXTERNAL_RETURN",
 ]);
 
 export const physicalEntityTypeEnum = pgEnum("physical_entity_type", [
@@ -347,6 +350,45 @@ export const physicalEntityTypeEnum = pgEnum("physical_entity_type", [
   "MOT",
 ]);
 
+export const attentionTypeEnum = pgEnum("attention_type", [
+  "DIAGNOSTICO",
+  "REPARACION",
+  "DIAGNOSTICO_GARANTIA",
+]);
+
+export const diagnosticStatusEnum = pgEnum("diagnostic_status", [
+  "EN_ESPERA",
+  "EN_DIAGNOSTICO",
+  "DIAGNOSTICO_TERMINADO",
+  "PENDIENTE_VALIDACION_GERENTE",
+  "VALIDADO",
+  "DEVUELTO_CORRECCION",
+]);
+
+export const warrantyDecisionEnum = pgEnum("warranty_decision", [
+  "GARANTIA_VALIDA",
+  "GARANTIA_NO_PROCEDENTE",
+]);
+
+export const repairStatusEnum = pgEnum("repair_status", [
+  "EN_ESPERA",
+  "EN_REPARACION",
+  "EN_ESPERA_REFACCIONES",
+  "REPARACION_TERMINADA",
+  "SIN_REPARACION",
+]);
+
+export const externalServiceStatusEnum = pgEnum("external_service_status", [
+  "AT_VENDOR",
+  "RETURNED",
+]);
+
+export const priorityCatalogEnum = pgEnum("priority_catalog", [
+  "DIAGNOSTICO",
+  "REPARACION",
+]);
+
+/** @deprecated migrado a repair_status */
 export const workOrderStatusEnum = pgEnum("work_order_status", [
   "OPEN",
   "CLOSED",
@@ -503,6 +545,138 @@ export const physicalMovements = pgTable("physical_movements", {
     .notNull(),
 });
 
+export const servicePriorityConfigs = pgTable(
+  "service_priority_configs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    companyId: uuid("company_id")
+      .notNull()
+      .references(() => companies.id, { onDelete: "cascade" }),
+    catalog: priorityCatalogEnum("catalog").notNull(),
+    code: text("code").notNull(),
+    label: text("label").notNull(),
+    priceMxn: integer("price_mxn").default(0).notNull(),
+    incrementPct: integer("increment_pct").default(0).notNull(),
+    targetMinDays: integer("target_min_days"),
+    targetMaxDays: integer("target_max_days"),
+    slaMaxDays: integer("sla_max_days").notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("service_priority_company_catalog_code").on(
+      t.companyId,
+      t.catalog,
+      t.code,
+    ),
+  ],
+);
+
+export const serviceAttentions = pgTable("service_attentions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  companyId: uuid("company_id")
+    .notNull()
+    .references(() => companies.id, { onDelete: "cascade" }),
+  clientId: uuid("client_id")
+    .notNull()
+    .references(() => clients.id),
+  equiId: uuid("equi_id").references(() => equiUnits.id),
+  motorId: uuid("motor_id").references(() => motors.id),
+  attentionType: attentionTypeEnum("attention_type").notNull(),
+  reportedFailure: text("reported_failure").notNull(),
+  priorityCode: text("priority_code").notNull(),
+  warrantySourceWorkOrderId: uuid("warranty_source_work_order_id"),
+  peerAttentionId: uuid("peer_attention_id"),
+  createdByActorUserId: uuid("created_by_actor_user_id")
+    .notNull()
+    .references(() => users.id),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const diagnostics = pgTable(
+  "diagnostics",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    companyId: uuid("company_id")
+      .notNull()
+      .references(() => companies.id, { onDelete: "cascade" }),
+    attentionId: uuid("attention_id")
+      .notNull()
+      .references(() => serviceAttentions.id, { onDelete: "cascade" }),
+    folioNumber: integer("folio_number").notNull(),
+    status: diagnosticStatusEnum("status").default("EN_ESPERA").notNull(),
+    assignedUserId: uuid("assigned_user_id").references(() => users.id),
+    technicalResult: text("technical_result"),
+    warrantyDecision: warrantyDecisionEnum("warranty_decision"),
+    frozenPriorityLabel: text("frozen_priority_label").notNull(),
+    frozenPriceMxn: integer("frozen_price_mxn").default(0).notNull(),
+    frozenIncrementPct: integer("frozen_increment_pct").default(0).notNull(),
+    frozenSlaMaxDays: integer("frozen_sla_max_days").notNull(),
+    slaStartedAt: timestamp("sla_started_at", { withTimezone: true }),
+    slaDueAt: timestamp("sla_due_at", { withTimezone: true }),
+    validationReturnReason: text("validation_return_reason"),
+    validatedByUserId: uuid("validated_by_user_id").references(() => users.id),
+    validatedAt: timestamp("validated_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("diagnostics_company_folio_unique").on(
+      t.companyId,
+      t.folioNumber,
+    ),
+  ],
+);
+
+export const technicalLogEntries = pgTable("technical_log_entries", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  companyId: uuid("company_id")
+    .notNull()
+    .references(() => companies.id, { onDelete: "cascade" }),
+  diagnosticId: uuid("diagnostic_id").references(() => diagnostics.id, {
+    onDelete: "cascade",
+  }),
+  workOrderId: uuid("work_order_id"),
+  body: text("body").notNull(),
+  authorUserId: uuid("author_user_id")
+    .notNull()
+    .references(() => users.id),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const externalServiceCases = pgTable("external_service_cases", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  companyId: uuid("company_id")
+    .notNull()
+    .references(() => companies.id, { onDelete: "cascade" }),
+  diagnosticId: uuid("diagnostic_id")
+    .notNull()
+    .references(() => diagnostics.id, { onDelete: "cascade" }),
+  supplierId: uuid("supplier_id")
+    .notNull()
+    .references(() => suppliers.id),
+  status: externalServiceStatusEnum("status").default("AT_VENDOR").notNull(),
+  vendorDocumentRef: text("vendor_document_ref"),
+  createdByActorUserId: uuid("created_by_actor_user_id")
+    .notNull()
+    .references(() => users.id),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
 export const workOrders = pgTable(
   "work_orders",
   {
@@ -511,9 +685,20 @@ export const workOrders = pgTable(
       .notNull()
       .references(() => companies.id, { onDelete: "cascade" }),
     folioNumber: integer("folio_number").notNull(),
+    attentionId: uuid("attention_id").references(() => serviceAttentions.id),
+    diagnosticId: uuid("diagnostic_id").references(() => diagnostics.id),
     equiId: uuid("equi_id").references(() => equiUnits.id),
     motorId: uuid("motor_id").references(() => motors.id),
+    repairStatus: repairStatusEnum("repair_status")
+      .default("EN_ESPERA")
+      .notNull(),
     status: workOrderStatusEnum("status").default("OPEN").notNull(),
+    assignedUserId: uuid("assigned_user_id").references(() => users.id),
+    technicalResult: text("technical_result"),
+    frozenPriorityLabel: text("frozen_priority_label"),
+    frozenIncrementPct: integer("frozen_increment_pct"),
+    frozenSlaMaxDays: integer("frozen_sla_max_days"),
+    slaStartedAt: timestamp("sla_started_at", { withTimezone: true }),
     summary: text("summary"),
     createdByActorUserId: uuid("created_by_actor_user_id")
       .notNull()

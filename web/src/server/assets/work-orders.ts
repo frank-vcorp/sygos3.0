@@ -18,7 +18,31 @@ export async function listWorkOrders(companyId: string) {
   return rows.map((r) => ({
     ...r,
     folio: formatOsFolio(r.folioNumber),
+    repairStatus: r.repairStatus,
   }));
+}
+
+export async function updateWorkOrderRepair(params: {
+  companyId: string;
+  workOrderId: string;
+  patch: Partial<{
+    repairStatus: (typeof workOrders.$inferSelect)["repairStatus"];
+    assignedUserId: string;
+    technicalResult: string;
+  }>;
+}) {
+  const db = getDb();
+  const [updated] = await db
+    .update(workOrders)
+    .set({ ...params.patch, updatedAt: new Date() })
+    .where(
+      and(
+        eq(workOrders.id, params.workOrderId),
+        eq(workOrders.companyId, params.companyId),
+      ),
+    )
+    .returning();
+  return updated ?? null;
 }
 
 export async function getWorkOrder(companyId: string, workOrderId: string) {

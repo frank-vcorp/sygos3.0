@@ -5,6 +5,7 @@ import {
   motors,
   physicalMovements,
 } from "@/db/schema";
+import { startSlaForAttentionAsset } from "@/server/ops/diagnostics";
 
 export async function listPhysicalMovements(params: {
   companyId: string;
@@ -73,6 +74,10 @@ export async function confirmEquiMovement(params: {
     .set({ custodyStatus: nextStatus, updatedAt: new Date() })
     .where(eq(equiUnits.id, params.equiId));
 
+  if (params.movementType === "ENTRY" || params.movementType === "TRIAL_RETURN") {
+    await startSlaForAttentionAsset({ equiId: params.equiId });
+  }
+
   return { ok: true as const };
 }
 
@@ -122,6 +127,10 @@ export async function confirmMotorCustodyMovement(params: {
     .update(motors)
     .set({ servomotoresIntakeStatus: nextStatus, updatedAt: new Date() })
     .where(eq(motors.id, params.motorId));
+
+  if (params.movementType === "INGRESO" || params.movementType === "TRIAL_RETURN") {
+    await startSlaForAttentionAsset({ motorId: params.motorId });
+  }
 
   return { ok: true as const };
 }

@@ -28,7 +28,7 @@ export const appNavSections: NavSection[] = [
   {
     title: "Operación",
     items: [
-      { label: "Operación técnica", href: "/inicio" },
+      { label: "Operación técnica", href: "/operacion/tecnica" },
       { label: "Cotizaciones", href: "/inicio" },
       { label: "Inventario", href: "/operacion/inventario" },
       { label: "Refacciones", href: "/operacion/refacciones" },
