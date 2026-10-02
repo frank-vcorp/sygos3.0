@@ -1,6 +1,15 @@
 FROM node:22-alpine AS base
 WORKDIR /app
-RUN apk add --no-cache libc6-compat
+# VPS builds sometimes hit transient Alpine DNS; retry before failing the deploy.
+RUN set -eux; \
+  for attempt in 1 2 3 4 5; do \
+    if apk update && apk add --no-cache libc6-compat; then \
+      exit 0; \
+    fi; \
+    echo "apk attempt ${attempt} failed, retrying..." >&2; \
+    sleep $((attempt * 5)); \
+  done; \
+  exit 1
 
 FROM base AS deps
 COPY package.json package-lock.json ./

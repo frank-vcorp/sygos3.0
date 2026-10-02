@@ -2,7 +2,11 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getAuthContext } from "@/server/auth/session";
 import { recordQuoteDecision } from "@/server/commercial/quotes";
-import { canSeeCommercialModule } from "@/server/rbac/commercial";
+import type { CompanySlug } from "@/lib/company";
+import {
+  canRecordQuoteDecision,
+  canSeeCommercialModule,
+} from "@/server/rbac/commercial";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -19,6 +23,14 @@ export async function POST(request: Request, { params }: Params) {
   const { id } = await params;
   try {
     const body = bodySchema.parse(await request.json());
+    if (
+      !canRecordQuoteDecision(
+        auth.effective.role,
+        auth.activeCompany.slug as CompanySlug,
+      )
+    ) {
+      return NextResponse.json({ error: "No autorizado." }, { status: 403 });
+    }
     const updated = await recordQuoteDecision({
       companyId: auth.activeCompany.id,
       quoteId: id,

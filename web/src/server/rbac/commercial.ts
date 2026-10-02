@@ -53,3 +53,35 @@ export function vendorQuoteScopeUserId(
   if (role === "VENTAS_SYSTRON") return actorUserId;
   return null;
 }
+
+/** Seguimiento comercial: envío, descuento permitido y decisión del cliente (§3.3). */
+export function canManageQuoteFollowUp(
+  role: UserRole,
+  slug: CompanySlug,
+): boolean {
+  if (isSuperAdmin(role) || role === "CEO" || role === "ADMINISTRADOR") {
+    return true;
+  }
+  if (role === "VENTAS_SYSTRON" && slug === "SYSTRON") return true;
+  if (role === "GERENTE_OPERATIVO_SERVOMOTORES" && slug === "SERVOMOTORES") {
+    return true;
+  }
+  return false;
+}
+
+export function canRecordQuoteDecision(
+  role: UserRole,
+  slug: CompanySlug,
+): boolean {
+  return canManageQuoteFollowUp(role, slug);
+}
+
+/** Precios visibles solo después de cotizar; CEO/Admin siempre si hay datos. */
+export function canViewQuoteEconomics(
+  role: UserRole,
+  status: string,
+): boolean {
+  if (canManageQuotePricing(role)) return true;
+  if (status === "PENDIENTE_COTIZAR") return false;
+  return canSeeCommercialModule(role);
+}

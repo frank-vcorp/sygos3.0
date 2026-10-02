@@ -12,6 +12,7 @@ import {
   quotePriceRevisions,
   quotes,
   serviceAttentions,
+  users,
   workOrders,
 } from "@/db/schema";
 import { formatQuoteFolio, nextFolioValue } from "@/server/masters/folios";
@@ -80,17 +81,30 @@ export async function listQuotes(params: {
     .select({
       quote: quotes,
       clientName: clients.legalName,
+      vendorName: users.displayName,
+      equiFolio: equiUnits.folioNumber,
+      motorFolio: motors.folioNumber,
     })
     .from(quotes)
     .innerJoin(clients, eq(clients.id, quotes.clientId))
+    .leftJoin(users, eq(users.id, quotes.vendorUserId))
+    .leftJoin(equiUnits, eq(equiUnits.id, quotes.equiId))
+    .leftJoin(motors, eq(motors.id, quotes.motorId))
     .where(and(...conditions))
     .orderBy(desc(quotes.updatedAt));
 
-  return rows.map(({ quote, clientName }) => ({
-    ...quote,
-    folio: formatQuoteFolio(quote.folioNumber),
-    clientName,
-  }));
+  return rows.map(({ quote, clientName, vendorName, equiFolio, motorFolio }) => {
+    let assetLabel: string | null = null;
+    if (equiFolio != null) assetLabel = `EQUI-${equiFolio}`;
+    else if (motorFolio != null) assetLabel = `MOT-${motorFolio}`;
+    return {
+      ...quote,
+      folio: formatQuoteFolio(quote.folioNumber),
+      clientName,
+      vendorName: vendorName ?? "—",
+      assetLabel,
+    };
+  });
 }
 
 export async function getQuoteDetail(companyId: string, quoteId: string) {
@@ -129,6 +143,16 @@ export async function getQuoteDetail(companyId: string, quoteId: string) {
     .from(quotePriceRevisions)
     .where(eq(quotePriceRevisions.quoteId, quoteId))
     .orderBy(desc(quotePriceRevisions.createdAt));
+
+  let vendorName: string | null = null;
+  if (row.vendorUserId) {
+    const [v] = await db
+      .select({ displayName: users.displayName })
+      .from(users)
+      .where(eq(users.id, row.vendorUserId))
+      .limit(1);
+    vendorName = v?.displayName ?? null;
+  }
 
   let assetLabel: string | null = null;
   if (row.equiId) {
@@ -173,6 +197,7 @@ export async function getQuoteDetail(companyId: string, quoteId: string) {
     revisions,
     assetLabel,
     linkedQuote,
+    vendorName,
   };
 }
 
@@ -539,6 +564,27 @@ export async function markQuoteSent(params: {
   return updated ?? null;
 }
 
+async function quoteAwaitingPhysicalEntry(
+  quote: typeof quotes.$inferSelect,
+): Promise<boolean> {
+  const db = getDb();
+  if (quote.equiId) {
+    const [e] = await db
+      .select({ custodyStatus: equiUnits.custodyStatus })
+      .from(equiUnits)
+      .where(eq(equiUnits.id, quote.equiId))
+      .limit(1);
+    return e?.custodyStatus === "AWAITING_ENTRY";
+  }
+  if (quote.motorId) return false;
+  return Boolean(
+    quote.prelimEquipmentType ||
+      quote.prelimBrand ||
+      quote.prelimModel ||
+      quote.prelimSerial,
+  );
+}
+
 export async function recordQuoteDecision(params: {
   companyId: string;
   quoteId: string;
@@ -581,12 +627,7 @@ export async function recordQuoteDecision(params: {
     .where(eq(clients.id, detail.quote.clientId))
     .limit(1);
 
-  const awaitingAsset =
-    !detail.quote.equiId &&
-    !detail.quote.motorId &&
-    (detail.quote.prelimEquipmentType ||
-      detail.quote.prelimBrand ||
-      detail.quote.prelimModel);
+  const awaitingAsset = await quoteAwaitingPhysicalEntry(detail.quote);
 
   let status: (typeof quotes.$inferSelect)["status"] = params.authorized
     ? awaitingAsset

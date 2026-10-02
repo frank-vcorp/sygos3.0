@@ -11,7 +11,9 @@ import {
   markQuoteSent,
   reviseAuthorizedPrice,
 } from "@/server/commercial/quotes";
+import type { CompanySlug } from "@/lib/company";
 import {
+  canManageQuoteFollowUp,
   canManageQuotePricing,
   canSeeCommercialModule,
   canSeeIntercompanyBase,
@@ -70,6 +72,14 @@ export async function PATCH(request: Request, { params }: Params) {
   try {
     const body = patchSchema.parse(await request.json());
     if (body.action === "send") {
+      if (
+        !canManageQuoteFollowUp(
+          auth.effective.role,
+          auth.activeCompany.slug as CompanySlug,
+        )
+      ) {
+        return NextResponse.json({ error: "No autorizado." }, { status: 403 });
+      }
       const updated = await markQuoteSent({
         companyId: auth.activeCompany.id,
         quoteId: id,
@@ -81,6 +91,14 @@ export async function PATCH(request: Request, { params }: Params) {
       return NextResponse.json({ quote: updated });
     }
     if (body.action === "discount") {
+      if (
+        !canManageQuoteFollowUp(
+          auth.effective.role,
+          auth.activeCompany.slug as CompanySlug,
+        )
+      ) {
+        return NextResponse.json({ error: "No autorizado." }, { status: 403 });
+      }
       const db = getDb();
       const [u] = await db
         .select({ vendorDiscountLimitPct: users.vendorDiscountLimitPct })
