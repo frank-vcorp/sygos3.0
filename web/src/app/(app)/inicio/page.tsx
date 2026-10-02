@@ -31,6 +31,9 @@ export default async function InicioPage() {
     <div className="mx-auto max-w-2xl space-y-6">
       <h1 className="text-2xl font-semibold">Inicio</h1>
       <div className="flex flex-wrap gap-3 text-sm">
+        <Link href="/operacion/recorrido" className="font-medium text-sygos-teal">
+          Recorridos operativos →
+        </Link>
         {canSeeCeoPanel(auth.effective.role) && (
           <Link href="/paneles/ceo" className="text-sygos-teal">
             Panel CEO →

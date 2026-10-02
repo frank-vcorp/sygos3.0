@@ -77,6 +77,13 @@ export async function confirmEquiMovement(params: {
 
   if (params.movementType === "ENTRY" || params.movementType === "TRIAL_RETURN") {
     await startSlaForAttentionAsset({ equiId: params.equiId });
+    const { continueJourneyAfterPhysicalIntake } = await import(
+      "@/server/commercial/quote-handoffs"
+    );
+    await continueJourneyAfterPhysicalIntake({
+      equiId: params.equiId,
+      actorUserId: params.actorUserId,
+    });
   }
 
   if (params.movementType === "DEFINITIVE_EXIT") {
@@ -144,6 +151,13 @@ export async function confirmMotorCustodyMovement(params: {
 
   if (params.movementType === "INGRESO" || params.movementType === "TRIAL_RETURN") {
     await startSlaForAttentionAsset({ motorId: params.motorId });
+    const { continueJourneyAfterPhysicalIntake } = await import(
+      "@/server/commercial/quote-handoffs"
+    );
+    await continueJourneyAfterPhysicalIntake({
+      motorId: params.motorId,
+      actorUserId: params.actorUserId,
+    });
   }
 
   return { ok: true as const };

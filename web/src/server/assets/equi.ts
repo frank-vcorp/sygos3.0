@@ -72,11 +72,15 @@ export async function ensureEquiBrand(companyId: string, name: string) {
 
 export async function listEquiUnits(params: {
   companyId: string;
+  clientId?: string;
   q?: string;
   custodyStatus?: string;
 }) {
   const db = getDb();
   const conditions = [eq(equiUnits.companyId, params.companyId)];
+  if (params.clientId) {
+    conditions.push(eq(equiUnits.clientId, params.clientId));
+  }
   if (params.custodyStatus) {
     conditions.push(
       eq(

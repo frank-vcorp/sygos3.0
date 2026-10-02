@@ -26,12 +26,14 @@ const sectionKey: Record<
   | "capital-humano"
   | "paneles"
 > = {
-  Comercial: "comercial",
-  Activos: "activos",
-  Operación: "operacion",
-  "Capital humano": "capital-humano",
-  Paneles: "paneles",
-  Administración: "administracion",
+  Recorrido: "operacion",
+  "1 · Comercial": "comercial",
+  "2 · Activos y custodia": "activos",
+  "3 · Operación técnica": "operacion",
+  "4 · Abastecimiento": "operacion",
+  "5 · Capital humano": "capital-humano",
+  "6 · Paneles por rol": "paneles",
+  "7 · Administración y finanzas": "administracion",
 };
 
 export function AppSidebar({

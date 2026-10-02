@@ -2,6 +2,12 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { QuoteBillingRequest } from "@/components/billing/billing-forms";
 import { QuoteActions } from "@/components/commercial/commercial-forms";
+import { QuoteJourneyPanel } from "@/components/commercial/quote-journey-panel";
+import { getClientDetail } from "@/server/masters/clients";
+import { listEquiUnits } from "@/server/assets/equi";
+import { listMotors } from "@/server/assets/motors";
+import { resolveCompanyIds } from "@/server/assets/context";
+import { getQuoteJourneyHint } from "@/server/commercial/quote-handoffs";
 import { canRequestFiscalDocument } from "@/server/rbac/billing";
 import type { CompanySlug } from "@/lib/company";
 import { formatMxn } from "@/server/commercial/money";
@@ -35,6 +41,27 @@ export default async function CotizacionDetallePage({ params }: Props) {
   const showBase =
     canSeeIntercompanyBase(auth.effective.role) &&
     detail.quote.intercompanyBaseTotalMxn != null;
+
+  const hint = await getQuoteJourneyHint({
+    companyId: auth.activeCompany.id,
+    quoteId: id,
+  });
+  const ids = await resolveCompanyIds();
+  const slug = auth.activeCompany.slug as CompanySlug;
+  const clientDetail = await getClientDetail({
+    companyId: auth.activeCompany.id,
+    clientId: q.clientId,
+  });
+  const equiRows = await listEquiUnits({
+    companyId: auth.activeCompany.id,
+    clientId: q.clientId,
+  });
+  const motorRows = await listMotors({
+    activeSlug: slug,
+    systronCompanyId: ids.systronId,
+    servomotoresCompanyId: ids.servomotoresId,
+    clientId: q.clientId,
+  });
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -95,6 +122,29 @@ export default async function CotizacionDetallePage({ params }: Props) {
         )}
       </section>
 
+      <QuoteJourneyPanel
+        quoteId={id}
+        status={q.status}
+        hint={hint}
+        clientId={q.clientId}
+        canLinkAsset={canManageQuotePricing(auth.effective.role)}
+        equiOptions={equiRows.map((e) => ({
+          id: e.id,
+          label: `${e.folio} · ${e.clientName}`,
+        }))}
+        motorOptions={motorRows.map((m) => ({
+          id: m.id,
+          label: m.folio,
+        }))}
+        quoteType={q.quoteType}
+        lineIds={detail.lines.map((l) => ({
+          id: l.id,
+          concept: l.concept,
+          lineAuthorized: l.lineAuthorized,
+        }))}
+        canDecide={canSeeCommercialModule(auth.effective.role)}
+      />
+
       <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="font-medium">Conceptos</h2>
         <ul className="mt-3 space-y-2 text-sm">
@@ -138,7 +188,9 @@ export default async function CotizacionDetallePage({ params }: Props) {
         status={q.status}
         canPrice={canManageQuotePricing(auth.effective.role)}
         canDecide={canSeeCommercialModule(auth.effective.role)}
-        contacts={detail.recipients.map((r) => ({ id: r.contactId, name: r.name }))}
+        contacts={
+          clientDetail?.contacts.map((c) => ({ id: c.id, name: c.name })) ?? []
+        }
       />
 
       {detail.revisions.length > 0 && (

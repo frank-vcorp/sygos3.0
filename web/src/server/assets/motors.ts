@@ -24,6 +24,7 @@ export async function listMotors(params: {
   activeSlug: CompanySlug;
   systronCompanyId: string;
   servomotoresCompanyId: string;
+  clientId?: string;
   q?: string;
   intakeFilter?: "PENDING_INTAKE" | "IN_CUSTODY" | "ALL";
 }) {
@@ -34,6 +35,9 @@ export async function listMotors(params: {
       servomotoresId: params.servomotoresCompanyId,
     }),
   ];
+  if (params.clientId) {
+    conditions.push(eq(motors.clientId, params.clientId));
+  }
   if (params.intakeFilter && params.intakeFilter !== "ALL") {
     conditions.push(eq(motors.servomotoresIntakeStatus, params.intakeFilter));
   }

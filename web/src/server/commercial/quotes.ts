@@ -549,6 +549,28 @@ export async function recordQuoteDecision(params: {
   const db = getDb();
   const detail = await getQuoteDetail(params.companyId, params.quoteId);
   if (!detail) return null;
+
+  if (
+    detail.quote.status === "AUTORIZADA" &&
+    detail.quote.quoteType === "VENTA_EQUIPO" &&
+    params.authorized &&
+    params.authorizedLineIds?.length
+  ) {
+    await authorizeEquipmentLines({
+      quoteId: params.quoteId,
+      lineIds: params.authorizedLineIds,
+      companyId: params.companyId,
+      actorUserId: params.actorUserId,
+      clientId: detail.quote.clientId,
+    });
+    const [row] = await db
+      .select()
+      .from(quotes)
+      .where(eq(quotes.id, params.quoteId))
+      .limit(1);
+    return row ?? null;
+  }
+
   if (detail.quote.status !== "PENDIENTE_DECISION") {
     throw new Error("INVALID_STATUS");
   }
@@ -614,6 +636,17 @@ export async function recordQuoteDecision(params: {
     actorUserId: params.actorUserId,
   });
 
+  if (params.authorized && status === "AUTORIZADA") {
+    const { continueJourneyAfterQuoteAuthorized } = await import(
+      "@/server/commercial/quote-handoffs"
+    );
+    await continueJourneyAfterQuoteAuthorized({
+      companyId: params.companyId,
+      quoteId: params.quoteId,
+      actorUserId: params.actorUserId,
+    });
+  }
+
   return updated;
 }
 
@@ -675,7 +708,6 @@ export async function linkQuoteToAsset(params: {
     .set({
       equiId: params.equiId ?? q.equiId,
       motorId: params.motorId ?? q.motorId,
-      status: "AUTORIZADA",
       updatedAt: new Date(),
     })
     .where(eq(quotes.id, params.quoteId))

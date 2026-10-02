@@ -8,43 +8,57 @@ export type NavSection = {
   items: NavItem[];
 };
 
-/** Placeholder Fase 1 — luego filtrado por RBAC */
+/** Orden alineado a recorridos operativos (discovery): comercial → activos/custodia → técnica → abastecimiento → RH → paneles → finanzas */
 export const appNavSections: NavSection[] = [
   {
-    title: "Comercial",
+    title: "Recorrido",
+    items: [{ label: "Mapa de recorridos", href: "/operacion/recorrido" }],
+  },
+  {
+    title: "1 · Comercial",
     items: [
-      { label: "Panel ventas", href: "/comercial/panel" },
-      { label: "Pendientes de cotizar", href: "/comercial/pendientes-cotizar" },
+      { label: "Clientes", href: "/comercial/clientes" },
+      { label: "Nueva cotización", href: "/comercial/cotizaciones/nueva" },
+      { label: "Pendientes de cotizar (CEO)", href: "/comercial/pendientes-cotizar" },
       { label: "Cotizaciones", href: "/comercial/cotizaciones" },
+      { label: "Panel y seguimiento", href: "/comercial/panel" },
       { label: "Ventas de equipo", href: "/comercial/ventas" },
+      { label: "Prospectos", href: "/comercial/prospectos" },
       { label: "Agenda", href: "/comercial/agenda" },
       { label: "Metas", href: "/comercial/metas" },
-      { label: "Clientes", href: "/comercial/clientes" },
-      { label: "Prospectos", href: "/comercial/prospectos" },
     ],
   },
   {
-    title: "Activos",
+    title: "2 · Activos y custodia",
     items: [
+      { label: "Almacén / ingreso físico", href: "/activos/almacen" },
       { label: "Equipos EQUI", href: "/activos/equi" },
       { label: "Motores MOT", href: "/activos/mot" },
-      { label: "Almacén", href: "/activos/almacen" },
     ],
   },
   {
-    title: "Operación",
+    title: "3 · Operación técnica",
     items: [
-      { label: "Operación técnica", href: "/operacion/tecnica" },
-      { label: "Inventario", href: "/operacion/inventario" },
+      { label: "Hub técnico", href: "/operacion/tecnica" },
+      { label: "Nueva atención", href: "/operacion/atenciones/nueva" },
+      { label: "Diagnósticos", href: "/operacion/diagnosticos" },
+      { label: "Validación gerente", href: "/operacion/validacion-diagnosticos" },
+      { label: "Órdenes de servicio (OS)", href: "/operacion/os" },
       { label: "Refacciones", href: "/operacion/refacciones" },
-      { label: "Compras directas", href: "/operacion/compras" },
-      { label: "Órdenes de compra", href: "/operacion/oc" },
-      { label: "Proveedores", href: "/operacion/proveedores" },
       { label: "Producción técnica", href: "/operacion/produccion" },
     ],
   },
   {
-    title: "Capital humano",
+    title: "4 · Abastecimiento",
+    items: [
+      { label: "Compras directas", href: "/operacion/compras" },
+      { label: "Órdenes de compra", href: "/operacion/oc" },
+      { label: "Proveedores", href: "/operacion/proveedores" },
+      { label: "Inventario refacciones", href: "/operacion/inventario" },
+    ],
+  },
+  {
+    title: "5 · Capital humano",
     items: [
       { label: "Colaboradores", href: "/capital-humano/colaboradores" },
       { label: "Nómina", href: "/capital-humano/nomina" },
@@ -54,7 +68,7 @@ export const appNavSections: NavSection[] = [
     ],
   },
   {
-    title: "Paneles",
+    title: "6 · Paneles por rol",
     items: [
       { label: "Panel CEO", href: "/paneles/ceo" },
       { label: "Panel Coordinación", href: "/paneles/coordinacion" },
@@ -64,7 +78,7 @@ export const appNavSections: NavSection[] = [
     ],
   },
   {
-    title: "Administración",
+    title: "7 · Administración y finanzas",
     items: [
       { label: "Facturación", href: "/administracion/facturacion" },
       { label: "Pagos", href: "/administracion/pagos" },
