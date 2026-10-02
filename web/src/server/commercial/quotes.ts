@@ -260,12 +260,28 @@ export async function ensureQuoteFromDiagnostic(params: {
     .limit(1);
   if (!diag || diag.status !== "VALIDADO") return null;
 
+  const { effectiveWarrantyIsValid } = await import("@/server/ops/warranty");
   const [attention] = await db
     .select()
     .from(serviceAttentions)
     .where(eq(serviceAttentions.id, diag.attentionId))
     .limit(1);
   if (!attention) return null;
+
+  if (
+    attention.attentionType === "DIAGNOSTICO_GARANTIA" &&
+    effectiveWarrantyIsValid(diag)
+  ) {
+    const { createWarrantyRepairWorkOrder } = await import(
+      "@/server/ops/warranty"
+    );
+    await createWarrantyRepairWorkOrder({
+      companyId: diag.companyId,
+      diagnosticId: diag.id,
+      actorUserId: params.actorUserId,
+    });
+    return null;
+  }
 
   const vendorId =
     (await resolveVendorForClient(attention.clientId)) ?? params.actorUserId;

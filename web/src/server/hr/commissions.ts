@@ -7,8 +7,12 @@ export async function accrueCommissionFromQuote(params: {
   quoteId: string;
   vendorUserId: string;
   amountMxn: number;
+  quoteTotalMxn: number;
+  ratePercent?: number;
+  periodKey?: string;
 }) {
-  const periodKey = new Date().toISOString().slice(0, 7);
+  const periodKey = params.periodKey ?? new Date().toISOString().slice(0, 7);
+  const ratePercent = params.ratePercent ?? 3;
   const db = getDb();
   const [existing] = await db
     .select({ id: commissionAccruals.id })
@@ -25,6 +29,8 @@ export async function accrueCommissionFromQuote(params: {
       quoteId: params.quoteId,
       periodKey,
       amountMxn: params.amountMxn,
+      quoteTotalMxn: params.quoteTotalMxn,
+      ratePercent,
       status: "DEVENGADA",
     })
     .returning();
@@ -44,13 +50,20 @@ export async function syncCommissionsForAuthorizedQuotes(companyId: string) {
     );
   for (const q of rows) {
     if (!q.vendorUserId || !q.totalMxn) continue;
-    const commission = Math.round(q.totalMxn * 0.03);
+    const ratePercent = 3;
+    const commission = Math.round((q.totalMxn * ratePercent) / 100);
     if (commission <= 0) continue;
+    const periodKey =
+      q.authorizedAt?.toISOString().slice(0, 7) ??
+      new Date().toISOString().slice(0, 7);
     await accrueCommissionFromQuote({
       companyId,
       quoteId: q.id,
       vendorUserId: q.vendorUserId,
       amountMxn: commission,
+      quoteTotalMxn: q.totalMxn,
+      ratePercent,
+      periodKey,
     });
   }
 }

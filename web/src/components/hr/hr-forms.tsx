@@ -62,7 +62,6 @@ export function OvertimeRequestForm(props: { employeeId?: string }) {
             employeeId: props.employeeId ?? fd.get("employeeId"),
             workDate: fd.get("workDate"),
             hours: Number(fd.get("hours")),
-            rateKind: fd.get("rateKind"),
           }),
         });
         router.refresh();
@@ -73,10 +72,9 @@ export function OvertimeRequestForm(props: { employeeId?: string }) {
       )}
       <input name="workDate" type="date" required className="w-full rounded border px-3 py-2" />
       <input name="hours" type="number" min={1} max={24} required className="w-full rounded border px-3 py-2" />
-      <select name="rateKind" className="w-full rounded border px-3 py-2">
-        <option value="DOBLE">Doble</option>
-        <option value="TRIPLE">Triple</option>
-      </select>
+      <p className="text-xs text-slate-500">
+        El tipo (doble/triple) se calcula por acumulado semanal (1–9 h doble, 10+ triple).
+      </p>
       <button type="submit" className="rounded-lg bg-sygos-teal px-3 py-2 text-white">
         Solicitar horas extra
       </button>

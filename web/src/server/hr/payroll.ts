@@ -18,6 +18,38 @@ import {
   stampPayrollRun,
   validatePayrollStampReadiness,
 } from "@/server/hr/payroll-fiscal";
+import { recordPayrollEgress } from "@/server/hr/payroll-finance";
+import { getTestSessionIdForRequest } from "@/server/test-mode/context";
+
+function isoWeekBoundsFromKey(weekKey: string) {
+  const m = weekKey.match(/^(\d{4})-W(\d{2})$/);
+  if (!m) return null;
+  const year = Number(m[1]);
+  const week = Number(m[2]);
+  const jan4 = new Date(year, 0, 4);
+  const day = jan4.getDay() || 7;
+  const monday = new Date(jan4);
+  monday.setDate(jan4.getDate() - day + 1 + (week - 1) * 7);
+  monday.setHours(0, 0, 0, 0);
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  sunday.setHours(23, 59, 59, 999);
+  return { start: monday, end: sunday };
+}
+
+function weekdayDaysInRange(start: Date, end: Date, rangeStart: Date, rangeEnd: Date) {
+  const a = new Date(Math.max(start.getTime(), rangeStart.getTime()));
+  const b = new Date(Math.min(end.getTime(), rangeEnd.getTime()));
+  let n = 0;
+  const d = new Date(a);
+  d.setHours(0, 0, 0, 0);
+  while (d <= b) {
+    const day = d.getDay();
+    if (day >= 1 && day <= 5) n += 1;
+    d.setDate(d.getDate() + 1);
+  }
+  return n;
+}
 
 export function currentIsoWeekKey(date = new Date()) {
   const d = new Date(date);
@@ -55,6 +87,7 @@ export async function generatePayrollDraft(params: {
   if (existing) return existing;
 
   const folioNumber = await nextFolioValue(params.companyId, "NOM");
+  const testSessionId = await getTestSessionIdForRequest();
   const [run] = await db
     .insert(payrollRuns)
     .values({
@@ -64,6 +97,7 @@ export async function generatePayrollDraft(params: {
       folioNumber,
       status: "BORRADOR",
       stampIdempotencyKey: randomUUID(),
+      testSessionId,
     })
     .returning();
 
@@ -106,6 +140,7 @@ export async function generatePayrollDraft(params: {
         eq(vacationRequests.status, "AUTORIZADA"),
       ),
     );
+  const weekBounds = isoWeekBoundsFromKey(weekKey);
   for (const v of vacations) {
     const [emp] = await db
       .select()
@@ -113,13 +148,18 @@ export async function generatePayrollDraft(params: {
       .where(eq(employees.id, v.employeeId))
       .limit(1);
     if (!emp || emp.attendanceExempt) continue;
+    const daysThisWeek =
+      weekBounds != null
+        ? weekdayDaysInRange(v.startDate, v.endDate, weekBounds.start, weekBounds.end)
+        : v.weekdayDays;
+    if (daysThisWeek <= 0) continue;
     const daily = emp.dailySalaryStampedMxn + emp.dailySalaryCashMxn;
-    const prima = Math.round(daily * v.weekdayDays * 0.25);
+    const prima = Math.round(daily * daysThisWeek * 0.25);
     if (prima > 0) {
       lines.push({
         payrollRunId: run.id,
         employeeId: emp.id,
-        concept: "Prima vacacional 25%",
+        concept: `Prima vacacional 25% (${daysThisWeek} d)`,
         amountMxn: prima,
         lineKind: "SYSTEM",
         vacationRequestId: v.id,
@@ -342,6 +382,14 @@ export async function authorizePayroll(params: {
         ),
       );
   }
+
+  const testSessionId = await getTestSessionIdForRequest();
+  await recordPayrollEgress({
+    companyId: params.companyId,
+    payrollRunId: params.payrollRunId,
+    authorizerUserId: params.authorizerUserId,
+    testSessionId,
+  });
 
   return run;
 }

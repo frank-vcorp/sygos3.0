@@ -1,4 +1,4 @@
-import { and, eq, gte, inArray, lte, sql } from "drizzle-orm";
+import { and, eq, gte, inArray, isNull, lte, sql } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import {
   accountsPayable,
@@ -39,6 +39,7 @@ export async function getFinanceDashboard(companyId: string, monthKey?: string) 
         inArray(fiscalDocuments.docKind, ["FACTURA"]),
         gte(fiscalDocuments.issuedAt, start),
         lte(fiscalDocuments.issuedAt, end),
+        isNull(fiscalDocuments.testSessionId),
       ),
     );
 
@@ -53,6 +54,7 @@ export async function getFinanceDashboard(companyId: string, monthKey?: string) 
         eq(payments.status, "VALIDADO"),
         gte(payments.validatedAt, start),
         lte(payments.validatedAt, end),
+        isNull(payments.testSessionId),
       ),
     );
 
@@ -67,6 +69,7 @@ export async function getFinanceDashboard(companyId: string, monthKey?: string) 
         eq(financialMovements.kind, "EGRESO"),
         gte(financialMovements.occurredAt, start),
         lte(financialMovements.occurredAt, end),
+        isNull(financialMovements.testSessionId),
       ),
     );
 

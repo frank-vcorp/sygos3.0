@@ -6,6 +6,8 @@ import type { CompanySlug } from "@/lib/company";
 import { nextFolioValue, formatOsFolio } from "@/server/masters/folios";
 import { getPrioritySnapshot } from "@/server/ops/priorities";
 import { createDiagnosticForAttention } from "@/server/ops/diagnostics";
+import { validateWarrantySourceWorkOrder } from "@/server/ops/warranty";
+import { getTestSessionIdForRequest } from "@/server/test-mode/context";
 
 export async function createServiceAttention(params: {
   activeSlug: CompanySlug;
@@ -22,8 +24,18 @@ export async function createServiceAttention(params: {
   if (!params.equiId && !params.motorId) {
     throw new Error("ASSET_REQUIRED");
   }
+  if (
+    params.attentionType === "DIAGNOSTICO_GARANTIA" &&
+    params.warrantySourceWorkOrderId
+  ) {
+    await validateWarrantySourceWorkOrder({
+      companyId: params.activeCompanyId,
+      sourceWorkOrderId: params.warrantySourceWorkOrderId,
+    });
+  }
 
   const db = getDb();
+  const testSessionId = await getTestSessionIdForRequest();
   const ids = await resolveCompanyIds();
 
   let executionCompanyId = params.activeCompanyId;
@@ -51,6 +63,7 @@ export async function createServiceAttention(params: {
       reportedFailure: params.reportedFailure.trim(),
       priorityCode: params.priorityCode,
       warrantySourceWorkOrderId: params.warrantySourceWorkOrderId ?? null,
+      testSessionId,
       createdByActorUserId: params.actorUserId,
     })
     .returning();
@@ -68,6 +81,7 @@ export async function createServiceAttention(params: {
         priorityCode: params.priorityCode,
         warrantySourceWorkOrderId: params.warrantySourceWorkOrderId ?? null,
         peerAttentionId: systronAttention.id,
+        testSessionId,
         createdByActorUserId: params.actorUserId,
       })
       .returning();

@@ -1,24 +1,13 @@
 import { and, desc, eq } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { employees, overtimeRequests } from "@/db/schema";
-
-function estimateOvertimeMxn(
-  emp: typeof employees.$inferSelect,
-  hours: number,
-  rate: "DOBLE" | "TRIPLE",
-) {
-  const daily = emp.dailySalaryStampedMxn + emp.dailySalaryCashMxn;
-  const hourly = daily / 8;
-  const mult = rate === "TRIPLE" ? 3 : 2;
-  return Math.round(hourly * hours * mult);
-}
+import { resolveOvertimeForEmployee } from "@/server/hr/overtime-weekly";
 
 export async function createOvertimeRequest(params: {
   companyId: string;
   employeeId: string;
   workDate: Date;
   hours: number;
-  rateKind: (typeof overtimeRequests.$inferSelect)["rateKind"];
   requestedByUserId: string;
 }) {
   const db = getDb();
@@ -28,7 +17,12 @@ export async function createOvertimeRequest(params: {
     .where(eq(employees.id, params.employeeId))
     .limit(1);
   if (!emp || emp.attendanceExempt) throw new Error("NOT_ALLOWED");
-  const amountMxn = estimateOvertimeMxn(emp, params.hours, params.rateKind);
+  const { amountMxn, rateKind } = await resolveOvertimeForEmployee({
+    companyId: params.companyId,
+    employeeId: params.employeeId,
+    workDate: params.workDate,
+    hours: params.hours,
+  });
   const [row] = await db
     .insert(overtimeRequests)
     .values({
@@ -36,7 +30,7 @@ export async function createOvertimeRequest(params: {
       employeeId: params.employeeId,
       workDate: params.workDate,
       hours: params.hours,
-      rateKind: params.rateKind,
+      rateKind,
       status: "PENDIENTE_JEFE",
       requestedByUserId: params.requestedByUserId,
       amountMxn,

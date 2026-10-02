@@ -1,12 +1,24 @@
 import { asc, eq } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import {
+  diagnostics,
+  directPurchases,
+  financialMovements,
+  fiscalDocuments,
+  payments,
+  payrollRuns,
+  purchaseOrders,
+  quotes,
+  serviceAttentions,
   testModeSessionRoles,
   testModeSessionUsers,
   testModeSessions,
   users,
+  workOrders,
   type UserRole,
 } from "@/db/schema";
+import { snapshotFoliosForSession, restoreFolioSnapshots } from "@/server/test-mode/folios";
+import { clearTestOverlays } from "@/server/test-mode/overlays";
 
 export async function getActiveTestModeSession() {
   const db = getDb();
@@ -84,6 +96,8 @@ export async function startTestModeSession(params: {
     );
   }
 
+  await snapshotFoliosForSession(session.id);
+
   return session;
 }
 
@@ -94,7 +108,29 @@ export async function endActiveTestModeSession() {
     .set({ active: false, endedAt: new Date() })
     .where(eq(testModeSessions.active, true))
     .returning();
-  return updated ?? null;
+  if (!updated) return null;
+
+  const sessionId = updated.id;
+  await restoreFolioSnapshots(sessionId);
+  await clearTestOverlays(sessionId);
+
+  const purge = [
+    financialMovements,
+    fiscalDocuments,
+    payments,
+    payrollRuns,
+    quotes,
+    workOrders,
+    diagnostics,
+    serviceAttentions,
+    purchaseOrders,
+    directPurchases,
+  ] as const;
+  for (const table of purge) {
+    await db.delete(table).where(eq(table.testSessionId, sessionId));
+  }
+
+  return updated;
 }
 
 export async function listUsersForTestModePicker() {

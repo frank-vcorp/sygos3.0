@@ -18,7 +18,6 @@ const postSchema = z.object({
   employeeId: z.string().uuid(),
   workDate: z.string(),
   hours: z.number().int().min(1).max(24),
-  rateKind: z.enum(["DOBLE", "TRIPLE"]),
 });
 
 export async function POST(request: Request) {
@@ -37,7 +36,6 @@ export async function POST(request: Request) {
       employeeId: body.employeeId,
       workDate: new Date(body.workDate),
       hours: body.hours,
-      rateKind: body.rateKind,
       requestedByUserId: auth.effective.id,
     });
     return NextResponse.json({ request: row }, { status: 201 });

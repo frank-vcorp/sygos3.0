@@ -12,6 +12,8 @@ import { listPayrollRuns } from "@/server/hr/payroll";
 import { listVacationRequests } from "@/server/hr/vacations";
 import { formatFiscalFolio } from "@/server/masters/folios";
 import { listDiagnostics } from "@/server/ops/diagnostics";
+import { listWarrantyCeoPending } from "@/server/ops/warranty";
+import { formatDiagFolio } from "@/server/ops/diagnostics";
 import { getProductionAnalytics } from "@/server/ops/production-analytics";
 import { listDirectPurchases } from "@/server/purchases/direct";
 import { listCeoPendingPurchaseOrders, listPurchaseOrders } from "@/server/purchases/orders";
@@ -43,6 +45,7 @@ export async function buildCeoPanel(companyId: string) {
     finance,
     production,
     commissions,
+    warrantyCeo,
   ] = await Promise.all([
     listCeoPendingPurchaseOrders(companyId),
     listVacationRequests(companyId),
@@ -60,6 +63,7 @@ export async function buildCeoPanel(companyId: string) {
     getFinanceDashboard(companyId),
     getProductionAnalytics(companyId),
     listCommissions(companyId),
+    listWarrantyCeoPending(companyId),
   ]);
 
   const payrollDraft = payrollRuns.filter((r) => r.status === "BORRADOR").slice(0, 8);
@@ -101,6 +105,10 @@ export async function buildCeoPanel(companyId: string) {
       cxpMxn: finance.cxpMxn,
     },
     commissionPendingMxn,
+    warrantyCommercialPending: warrantyCeo.map((w) => ({
+      href: `/operacion/diagnosticos/${w.diagnostic.id}`,
+      label: `${formatDiagFolio(w.diagnostic.folioNumber)} · Garantía no procedente`,
+    })),
   };
 }
 

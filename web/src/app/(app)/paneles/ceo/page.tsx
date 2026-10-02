@@ -97,6 +97,11 @@ export default async function PanelCeoPage() {
           <PanelRow key={d.href} href={d.href} label={d.label} />
         ))}
       </PanelSection>
+      <PanelSection title="Garantías · decisión comercial CEO">
+        {panel.warrantyCommercialPending.map((w) => (
+          <PanelRow key={w.href} href={w.href} label={w.label} />
+        ))}
+      </PanelSection>
       <PanelSection title="Pendientes de cotizar">
         {panel.quotesPendingPricing.map((q) => (
           <PanelRow

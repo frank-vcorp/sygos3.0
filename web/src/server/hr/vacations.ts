@@ -1,6 +1,8 @@
 import { and, eq } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { employees, vacationRequests } from "@/db/schema";
+import { markVacationDaysOnCalendar } from "@/server/hr/attendance-daily";
+import { logFunctionalHistory } from "@/server/history/functional";
 
 function countWeekdays(start: Date, end: Date) {
   let n = 0;
@@ -98,6 +100,24 @@ export async function approveVacationRequest(params: {
     })
     .where(eq(vacationRequests.id, params.requestId))
     .returning();
+
+  if (updated) {
+    await markVacationDaysOnCalendar({
+      companyId: params.companyId,
+      employeeId: updated.employeeId,
+      startDate: updated.startDate,
+      endDate: updated.endDate,
+      vacationRequestId: updated.id,
+    });
+    await logFunctionalHistory({
+      companyId: params.companyId,
+      entityType: "vacation_request",
+      entityId: updated.id,
+      action: "AUTORIZADA",
+      detail: `${updated.weekdayDays} días hábiles`,
+      actorUserId: params.approverUserId,
+    });
+  }
   return updated;
 }
 

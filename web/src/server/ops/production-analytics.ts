@@ -1,9 +1,11 @@
 import { and, eq, gte, inArray, lte, sql } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import {
+  companies,
   diagnostics,
   productionEntries,
   quotes,
+  serviceAttentions,
   users,
   workOrders,
 } from "@/db/schema";
@@ -42,23 +44,39 @@ export async function getProductionAnalytics(
     )
     .groupBy(productionEntries.technicianUserId, users.displayName);
 
+  const [companyRow] = await db
+    .select({ slug: companies.slug })
+    .from(companies)
+    .where(eq(companies.id, companyId))
+    .limit(1);
+
   const validatedByTech = await db
     .select({
-      assignedUserId: diagnostics.assignedUserId,
+      attributedUserId: diagnostics.validatedByUserId,
       displayName: users.displayName,
+      role: users.role,
       count: sql<number>`count(*)::int`,
     })
     .from(diagnostics)
-    .innerJoin(users, eq(users.id, diagnostics.assignedUserId))
+    .innerJoin(users, eq(users.id, diagnostics.validatedByUserId))
+    .innerJoin(
+      serviceAttentions,
+      eq(serviceAttentions.id, diagnostics.attentionId),
+    )
     .where(
       and(
         eq(diagnostics.companyId, companyId),
         eq(diagnostics.status, "VALIDADO"),
         gte(diagnostics.validatedAt, start),
         lte(diagnostics.validatedAt, end),
+        sql`${serviceAttentions.attentionType} <> 'DIAGNOSTICO_GARANTIA' OR ${diagnostics.warrantyDecision} = 'GARANTIA_NO_PROCEDENTE'`,
       ),
     )
-    .groupBy(diagnostics.assignedUserId, users.displayName);
+    .groupBy(
+      diagnostics.validatedByUserId,
+      users.displayName,
+      users.role,
+    );
 
   const repairsClosed = await db
     .select({
@@ -129,13 +147,19 @@ export async function getProductionAnalytics(
     });
   }
   for (const row of validatedByTech) {
-    if (!row.assignedUserId) continue;
-    const existing = techMap.get(row.assignedUserId);
+    if (!row.attributedUserId) continue;
+    if (
+      companyRow?.slug === "SYSTRON" &&
+      row.role === "GERENTE_OPERATIVO_SYSTRON"
+    ) {
+      continue;
+    }
+    const existing = techMap.get(row.attributedUserId);
     if (existing) {
       existing.diagnosticsValidated = row.count;
     } else {
-      techMap.set(row.assignedUserId, {
-        userId: row.assignedUserId,
+      techMap.set(row.attributedUserId, {
+        userId: row.attributedUserId,
         name: row.displayName ?? "—",
         hours: 0,
         productionEntries: 0,

@@ -4,6 +4,7 @@ import {
   equiUnits,
   motors,
   physicalMovements,
+  workOrders,
 } from "@/db/schema";
 import { startSlaForAttentionAsset } from "@/server/ops/diagnostics";
 
@@ -76,6 +77,19 @@ export async function confirmEquiMovement(params: {
 
   if (params.movementType === "ENTRY" || params.movementType === "TRIAL_RETURN") {
     await startSlaForAttentionAsset({ equiId: params.equiId });
+  }
+
+  if (params.movementType === "DEFINITIVE_EXIT") {
+    const now = new Date();
+    await db
+      .update(workOrders)
+      .set({ paidPhysicalExitAt: now, updatedAt: now })
+      .where(
+        and(
+          eq(workOrders.companyId, params.companyId),
+          eq(workOrders.equiId, params.equiId),
+        ),
+      );
   }
 
   return { ok: true as const };

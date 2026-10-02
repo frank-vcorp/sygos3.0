@@ -1,8 +1,10 @@
 import {
   boolean,
   integer,
+  jsonb,
   pgEnum,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   uniqueIndex,
@@ -154,7 +156,46 @@ export const testModeSessions = pgTable("test_mode_sessions", {
     .notNull(),
   endedAt: timestamp("ended_at", { withTimezone: true }),
   active: boolean("active").default(true).notNull(),
+  folioSnapshot: jsonb("folio_snapshot"),
 });
+
+export const testModeFolioSnapshots = pgTable(
+  "test_mode_folio_snapshots",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    sessionId: uuid("session_id")
+      .notNull()
+      .references(() => testModeSessions.id, { onDelete: "cascade" }),
+    companyId: uuid("company_id")
+      .notNull()
+      .references(() => companies.id, { onDelete: "cascade" }),
+    folioType: text("folio_type").notNull(),
+    lastValue: integer("last_value").notNull(),
+  },
+  (t) => [
+    uniqueIndex("test_mode_folio_snapshots_unique").on(
+      t.sessionId,
+      t.companyId,
+      t.folioType,
+    ),
+  ],
+);
+
+export const testModeOverlays = pgTable(
+  "test_mode_overlays",
+  {
+    sessionId: uuid("session_id")
+      .notNull()
+      .references(() => testModeSessions.id, { onDelete: "cascade" }),
+    entityKey: text("entity_key").notNull(),
+    payload: jsonb("payload").notNull(),
+    isDeleted: boolean("is_deleted").default(false).notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.sessionId, t.entityKey] })],
+);
 
 export const testModeSessionUsers = pgTable(
   "test_mode_session_users",
@@ -637,6 +678,9 @@ export const serviceAttentions = pgTable("service_attentions", {
   priorityCode: text("priority_code").notNull(),
   warrantySourceWorkOrderId: uuid("warranty_source_work_order_id"),
   peerAttentionId: uuid("peer_attention_id"),
+  testSessionId: uuid("test_session_id").references(() => testModeSessions.id, {
+    onDelete: "cascade",
+  }),
   createdByActorUserId: uuid("created_by_actor_user_id")
     .notNull()
     .references(() => users.id),
@@ -660,6 +704,18 @@ export const diagnostics = pgTable(
     assignedUserId: uuid("assigned_user_id").references(() => users.id),
     technicalResult: text("technical_result"),
     warrantyDecision: warrantyDecisionEnum("warranty_decision"),
+    warrantyCommercialOverride: boolean("warranty_commercial_override")
+      .default(false)
+      .notNull(),
+    warrantyCommercialOverrideByUserId: uuid(
+      "warranty_commercial_override_by_user_id",
+    ).references(() => users.id),
+    warrantyCommercialOverrideAt: timestamp("warranty_commercial_override_at", {
+      withTimezone: true,
+    }),
+    testSessionId: uuid("test_session_id").references(() => testModeSessions.id, {
+      onDelete: "cascade",
+    }),
     frozenPriorityLabel: text("frozen_priority_label").notNull(),
     frozenPriceMxn: integer("frozen_price_mxn").default(0).notNull(),
     frozenIncrementPct: integer("frozen_increment_pct").default(0).notNull(),
@@ -749,6 +805,13 @@ export const workOrders = pgTable(
     frozenSlaMaxDays: integer("frozen_sla_max_days"),
     slaStartedAt: timestamp("sla_started_at", { withTimezone: true }),
     summary: text("summary"),
+    paidPhysicalExitAt: timestamp("paid_physical_exit_at", {
+      withTimezone: true,
+    }),
+    isWarrantyRepair: boolean("is_warranty_repair").default(false).notNull(),
+    testSessionId: uuid("test_session_id").references(() => testModeSessions.id, {
+      onDelete: "cascade",
+    }),
     createdByActorUserId: uuid("created_by_actor_user_id")
       .notNull()
       .references(() => users.id),
@@ -915,6 +978,9 @@ export const quotes = pgTable(
     decisionByUserId: uuid("decision_by_user_id").references(() => users.id),
     decisionAt: timestamp("decision_at", { withTimezone: true }),
     authorizedAt: timestamp("authorized_at", { withTimezone: true }),
+    testSessionId: uuid("test_session_id").references(() => testModeSessions.id, {
+      onDelete: "cascade",
+    }),
     createdByActorUserId: uuid("created_by_actor_user_id")
       .notNull()
       .references(() => users.id),
@@ -1231,6 +1297,9 @@ export const fiscalDocuments = pgTable(
       .references(() => users.id),
     issuedByUserId: uuid("issued_by_user_id").references(() => users.id),
     issuedAt: timestamp("issued_at", { withTimezone: true }),
+    testSessionId: uuid("test_session_id").references(() => testModeSessions.id, {
+      onDelete: "cascade",
+    }),
     createdByActorUserId: uuid("created_by_actor_user_id")
       .notNull()
       .references(() => users.id),
@@ -1338,6 +1407,9 @@ export const payments = pgTable(
     validatedByUserId: uuid("validated_by_user_id").references(() => users.id),
     validatedAt: timestamp("validated_at", { withTimezone: true }),
     linkedMirrorPaymentId: uuid("linked_mirror_payment_id"),
+    testSessionId: uuid("test_session_id").references(() => testModeSessions.id, {
+      onDelete: "cascade",
+    }),
     createdByActorUserId: uuid("created_by_actor_user_id")
       .notNull()
       .references(() => users.id),
@@ -1430,6 +1502,9 @@ export const directPurchases = pgTable(
     financialMovementId: uuid("financial_movement_id"),
     processedByUserId: uuid("processed_by_user_id").references(() => users.id),
     processedAt: timestamp("processed_at", { withTimezone: true }),
+    testSessionId: uuid("test_session_id").references(() => testModeSessions.id, {
+      onDelete: "cascade",
+    }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -1475,6 +1550,9 @@ export const purchaseOrders = pgTable(
     financialMovementId: uuid("financial_movement_id"),
     processedByUserId: uuid("processed_by_user_id").references(() => users.id),
     processedAt: timestamp("processed_at", { withTimezone: true }),
+    testSessionId: uuid("test_session_id").references(() => testModeSessions.id, {
+      onDelete: "cascade",
+    }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -1533,12 +1611,16 @@ export const financialMovements = pgTable(
       () => purchaseOrders.id,
     ),
     accountsPayableId: uuid("accounts_payable_id"),
+    payrollRunId: uuid("payroll_run_id").references(() => payrollRuns.id),
     pendingVerification: boolean("pending_verification")
       .default(false)
       .notNull(),
     regularizedFiscalDocumentId: uuid(
       "regularized_fiscal_document_id",
     ).references(() => fiscalDocuments.id),
+    testSessionId: uuid("test_session_id").references(() => testModeSessions.id, {
+      onDelete: "cascade",
+    }),
     occurredAt: timestamp("occurred_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -1717,6 +1799,9 @@ export const payrollRuns = pgTable(
     stampIdempotencyKey: text("stamp_idempotency_key"),
     authorizedByUserId: uuid("authorized_by_user_id").references(() => users.id),
     authorizedAt: timestamp("authorized_at", { withTimezone: true }),
+    testSessionId: uuid("test_session_id").references(() => testModeSessions.id, {
+      onDelete: "cascade",
+    }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -1779,7 +1864,67 @@ export const commissionAccruals = pgTable("commission_acruals", {
   quoteId: uuid("quote_id").references(() => quotes.id),
   periodKey: text("period_key").notNull(),
   amountMxn: integer("amount_mxn").notNull(),
+  quoteTotalMxn: integer("quote_total_mxn"),
+  ratePercent: integer("rate_percent").default(3).notNull(),
   status: commissionStatusEnum("status").default("DEVENGADA").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const attendanceDayClassificationEnum = pgEnum(
+  "attendance_day_classification",
+  [
+    "NORMAL",
+    "RETARDO",
+    "AUSENCIA",
+    "VACACIONES",
+    "PERMISO",
+    "SALIDA_FALTANTE",
+  ],
+);
+
+export const attendanceDaily = pgTable(
+  "attendance_daily",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    companyId: uuid("company_id")
+      .notNull()
+      .references(() => companies.id, { onDelete: "cascade" }),
+    employeeId: uuid("employee_id")
+      .notNull()
+      .references(() => employees.id, { onDelete: "cascade" }),
+    workDate: timestamp("work_date", { withTimezone: true }).notNull(),
+    classification: attendanceDayClassificationEnum("classification").notNull(),
+    vacationRequestId: uuid("vacation_request_id").references(
+      () => vacationRequests.id,
+      { onDelete: "set null" },
+    ),
+    note: text("note"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("attendance_daily_employee_date_unique").on(
+      t.employeeId,
+      t.workDate,
+    ),
+  ],
+);
+
+export const functionalHistoryEntries = pgTable("functional_history_entries", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  companyId: uuid("company_id")
+    .notNull()
+    .references(() => companies.id, { onDelete: "cascade" }),
+  entityType: text("entity_type").notNull(),
+  entityId: uuid("entity_id").notNull(),
+  action: text("action").notNull(),
+  detail: text("detail"),
+  actorUserId: uuid("actor_user_id")
+    .notNull()
+    .references(() => users.id),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),

@@ -154,8 +154,9 @@ export function TestModePanel(props: {
       )}
       {message && <p className="text-sm text-red-700">{message}</p>}
       <p className="text-xs text-slate-500">
-        v1: bloquea efectos externos y muestra advertencia. Los datos operativos
-        siguen en la base de producción; use staging para pruebas destructivas.
+        Los participantes usan folios de prueba aislados; al finalizar se eliminan
+        registros creados en la sesión y se restauran secuencias reales. Efectos
+        externos (CFDI, correo, WhatsApp) permanecen simulados.
       </p>
     </div>
   );

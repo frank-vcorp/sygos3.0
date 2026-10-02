@@ -41,6 +41,8 @@ async function insertMovement(params: {
   directPurchaseId?: string;
   purchaseOrderId?: string;
   accountsPayableId?: string;
+  payrollRunId?: string;
+  testSessionId?: string | null;
   pendingVerification?: boolean;
 }) {
   const db = getDb();
@@ -60,6 +62,8 @@ async function insertMovement(params: {
       directPurchaseId: params.directPurchaseId ?? null,
       purchaseOrderId: params.purchaseOrderId ?? null,
       accountsPayableId: params.accountsPayableId ?? null,
+      payrollRunId: params.payrollRunId ?? null,
+      testSessionId: params.testSessionId ?? null,
       pendingVerification: params.pendingVerification ?? false,
       createdByUserId: params.createdByUserId,
     })
@@ -97,13 +101,17 @@ export async function recordExpense(params: {
   directPurchaseId?: string;
   purchaseOrderId?: string;
   accountsPayableId?: string;
+  payrollRunId?: string;
+  testSessionId?: string | null;
   pendingVerification?: boolean;
 }) {
-  await adjustAccountBalance({
-    accountId: params.accountId,
-    companyId: params.companyId,
-    deltaMxn: -params.amountMxn,
-  });
+  if (!params.testSessionId) {
+    await adjustAccountBalance({
+      accountId: params.accountId,
+      companyId: params.companyId,
+      deltaMxn: -params.amountMxn,
+    });
+  }
   return insertMovement({
     ...params,
     kind: "EGRESO",

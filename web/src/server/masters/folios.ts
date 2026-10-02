@@ -1,6 +1,8 @@
 import { and, eq, sql } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { folioSequences, globalFolioSequences } from "@/db/schema";
+import { getTestSessionIdForRequest } from "@/server/test-mode/context";
+import { nextTestFolioValue } from "@/server/test-mode/folios";
 
 export function formatEquiFolio(n: number): string {
   return `EQUI-${n}`;
@@ -76,6 +78,14 @@ export async function nextFolioValue(
   companyId: string,
   folioType: string,
 ): Promise<number> {
+  const testSessionId = await getTestSessionIdForRequest();
+  if (testSessionId) {
+    return nextTestFolioValue({
+      sessionId: testSessionId,
+      companyId,
+      folioType,
+    });
+  }
   const db = getDb();
   const [row] = await db
     .insert(folioSequences)
