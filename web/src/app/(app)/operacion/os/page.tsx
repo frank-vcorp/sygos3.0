@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ListShell } from "@/components/masters/list-shell";
+import { repairStatusLabel } from "@/lib/discovery/labels/work-orders";
 import { listWorkOrders } from "@/server/assets/work-orders";
 import { getAuthContext } from "@/server/auth/session";
 import { canSeeTechnicalOps } from "@/server/rbac/ops";
@@ -17,7 +18,7 @@ export default async function OsListPage() {
   return (
     <ListShell
       title="Órdenes de servicio"
-      description="Reparación preautorizada y OS derivadas."
+      description="Módulo §4.4 — reparación preautorizada, refacciones y handoff a cotización cuando termina."
       createHref="/operacion/atenciones/nueva"
       createLabel="Nueva atención reparación"
     >
@@ -37,7 +38,9 @@ export default async function OsListPage() {
                   {r.folio}
                 </Link>
               </td>
-              <td className="px-4 py-3">{r.repairStatus}</td>
+              <td className="px-4 py-3">
+                {repairStatusLabel[r.repairStatus ?? ""] ?? r.repairStatus}
+              </td>
               <td className="px-4 py-3">{r.summary ?? "—"}</td>
             </tr>
           ))}

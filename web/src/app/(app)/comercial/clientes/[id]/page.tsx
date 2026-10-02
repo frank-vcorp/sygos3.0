@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { DetailSection, RelationLinks } from "@/components/discovery/detail-section";
 import { ClientDetailPanel } from "@/components/masters/client-detail-panel";
+import { listClientRelationLinks } from "@/server/masters/client-relations";
 import type { CompanySlug } from "@/lib/company";
 import { getClientDetail } from "@/server/masters/clients";
 import { listCommercialResponsibleOptions } from "@/server/masters/responsible";
@@ -30,6 +32,10 @@ export default async function ClienteDetallePage({ params }: Props) {
   const responsibleOptions = await listCommercialResponsibleOptions(
     companySlug,
   );
+  const relationLinks = await listClientRelationLinks({
+    companyId: auth.activeCompany.id,
+    clientId: id,
+  });
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
@@ -49,6 +55,12 @@ export default async function ClienteDetallePage({ params }: Props) {
         canReassign={canReassignClientResponsible(auth.effective.role)}
         responsibleOptions={responsibleOptions}
       />
+      <DetailSection
+        title="Relaciones navegables"
+        description="EQUI y cotizaciones recientes cuando existan (§3.1)."
+      >
+        <RelationLinks links={relationLinks} />
+      </DetailSection>
     </div>
   );
 }

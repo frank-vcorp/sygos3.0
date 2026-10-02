@@ -15,8 +15,17 @@ import { listSuppliers } from "@/server/masters/suppliers";
 import { getAuthContext } from "@/server/auth/session";
 import { canSeeTechnicalOps } from "@/server/rbac/ops";
 import { isSuperAdmin } from "@/server/rbac/roles";
+import { DetailSection, RelationLinks } from "@/components/discovery/detail-section";
 import { JourneyPanel } from "@/components/journey/journey-panel";
+import {
+  attentionTypeLabel,
+  diagnosticStatusLabel,
+} from "@/lib/discovery/labels/diagnostics";
 import { getDiagnosticJourneyHint } from "@/server/journey/diagnostic-handoffs";
+import { getDb } from "@/db/client";
+import { quotes } from "@/db/schema";
+import { eq } from "drizzle-orm";
+import { formatQuoteFolio } from "@/server/masters/folios";
 
 export const dynamic = "force-dynamic";
 
@@ -46,6 +55,39 @@ export default async function DiagnosticoDetallePage({ params }: Props) {
     auth.effective.role === "ADMINISTRADOR" ||
     isSuperAdmin(auth.effective.role);
 
+  const db = getDb();
+  const [linkedQuote] = await db
+    .select({ id: quotes.id, folioNumber: quotes.folioNumber })
+    .from(quotes)
+    .where(eq(quotes.diagnosticId, id))
+    .limit(1);
+
+  const relationLinks: { href: string; label: string }[] = [];
+  if (detail.attention?.clientId) {
+    relationLinks.push({
+      href: `/comercial/clientes/${detail.attention.clientId}`,
+      label: "Cliente",
+    });
+  }
+  if (detail.attention?.equiId) {
+    relationLinks.push({
+      href: `/activos/equi/${detail.attention.equiId}`,
+      label: detail.assetLabel.startsWith("EQUI") ? detail.assetLabel : "EQUI",
+    });
+  }
+  if (detail.attention?.motorId) {
+    relationLinks.push({
+      href: `/activos/mot/${detail.attention.motorId}`,
+      label: detail.assetLabel.startsWith("MOT") ? detail.assetLabel : "MOT",
+    });
+  }
+  if (linkedQuote) {
+    relationLinks.push({
+      href: `/comercial/cotizaciones/${linkedQuote.id}`,
+      label: `Cotización ${formatQuoteFolio(linkedQuote.folioNumber)}`,
+    });
+  }
+
   const journeyHint = await getDiagnosticJourneyHint({
     diagnosticId: id,
     companyId: detail.diagnostic.companyId,
@@ -66,8 +108,9 @@ export default async function DiagnosticoDetallePage({ params }: Props) {
           {detail.clientName} · {detail.assetLabel} · {detail.attention?.attentionType}
         </p>
         <p className="text-sm text-slate-500">
-          {detail.attention?.reportedFailure} · Estado {detail.diagnostic.status}
+          {diagnosticStatusLabel[detail.diagnostic.status] ?? detail.diagnostic.status}
         </p>
+        <p className="text-sm text-slate-600">{detail.attention?.reportedFailure}</p>
         {detail.attention?.warrantySourceWorkOrderId && (
           <p className="text-sm text-slate-600">
             Reparación origen:{" "}
@@ -88,7 +131,26 @@ export default async function DiagnosticoDetallePage({ params }: Props) {
           </p>
         )}
       </div>
-      <JourneyPanel hint={journeyHint} />
+      <JourneyPanel title="Qué falta para avanzar" hint={journeyHint} />
+      <DetailSection title="Contexto" description="Datos heredados de la Atención (§4.3).">
+        <p>
+          <span className="text-slate-500">Tipo:</span>{" "}
+          {detail.attention?.attentionType ?
+            (attentionTypeLabel[detail.attention.attentionType] ??
+              detail.attention.attentionType)
+          : "—"}
+        </p>
+        <p>
+          <span className="text-slate-500">Prioridad:</span>{" "}
+          {detail.diagnostic.frozenPriorityLabel ?? "—"}
+        </p>
+        <p>
+          <span className="text-slate-500">Equipo:</span> {detail.assetLabel}
+        </p>
+      </DetailSection>
+      <DetailSection title="Relaciones navegables">
+        <RelationLinks links={relationLinks} />
+      </DetailSection>
       <WarrantyGerenteActions
         diagnosticId={id}
         status={detail.diagnostic.status}

@@ -13,29 +13,50 @@ export default async function OperacionTecnicaPage() {
 
   const slug = auth.activeCompany.slug as CompanySlug;
   const links = [
-    { href: "/operacion/atenciones/nueva", label: "Nueva atención técnica" },
-    { href: "/operacion/diagnosticos", label: "Diagnósticos" },
-    { href: "/operacion/os", label: "Órdenes de servicio (OS)" },
-    { href: "/operacion/refacciones", label: "Solicitudes de refacción" },
+    {
+      href: "/operacion/atenciones/nueva",
+      label: "Nueva atención técnica",
+      desc: "Cliente → EQUI/MOT → tipo → prioridad → contexto (§4.2). SLA con ingreso físico.",
+    },
+    {
+      href: "/operacion/diagnosticos",
+      label: "Diagnósticos",
+      desc: "Listado, detalle, bitácora y validación Gerente Operativo.",
+    },
+    ...(canValidateDiagnostics(auth.effective.role, slug)
+      ? [
+          {
+            href: "/operacion/diagnosticos?vista=validacion",
+            label: "Pendientes de validación",
+            desc: "Bandeja del módulo Diagnósticos — no es un módulo aparte.",
+          },
+        ]
+      : []),
+    {
+      href: "/operacion/os",
+      label: "Órdenes de servicio (OS)",
+      desc: "Reparación preautorizada, refacciones y cierre técnico (§4.4).",
+    },
+    {
+      href: "/operacion/refacciones",
+      label: "Solicitudes de refacción",
+      desc: "Desde OS hacia almacén / compras.",
+    },
   ];
-  if (canValidateDiagnostics(auth.effective.role, slug)) {
-    links.splice(2, 0, {
-      href: "/operacion/validacion-diagnosticos",
-      label: "Validación Gerente Operativo",
-    });
-  }
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <h1 className="text-2xl font-semibold">Operación técnica</h1>
       <p className="text-sm text-slate-600">
-        Atenciones, diagnósticos, reparación preautorizada, bitácora y SLA (inicio con ingreso físico).
+        Hub del discovery §4: atenciones, diagnósticos, OS y bandejas internas. Cada módulo concentra
+        sus vistas; aquí solo accesos operativos.
       </p>
-      <ul className="divide-y rounded-xl border bg-white">
+      <ul className="divide-y rounded-xl border bg-white shadow-sm">
         {links.map((l) => (
           <li key={l.href}>
-            <Link href={l.href} className="block px-4 py-3 text-sm font-medium text-sky-800 hover:bg-slate-50">
-              {l.label}
+            <Link href={l.href} className="block px-4 py-4 hover:bg-slate-50">
+              <p className="text-sm font-medium text-sygos-teal">{l.label}</p>
+              <p className="mt-0.5 text-xs text-slate-500">{l.desc}</p>
             </Link>
           </li>
         ))}
