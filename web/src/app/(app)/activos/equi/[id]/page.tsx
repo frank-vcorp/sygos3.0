@@ -6,7 +6,10 @@ import { getEquiDetail } from "@/server/assets/equi";
 import { listPhysicalMovements } from "@/server/assets/custody";
 import { getAuthContext } from "@/server/auth/session";
 import { canOperateSystronWarehouse, canSeeEqui } from "@/server/rbac/assets";
+import { DetailSection, RelationLinks } from "@/components/discovery/detail-section";
+import { equiCustodyLabel } from "@/lib/discovery/labels/assets";
 import { JourneyPanel } from "@/components/journey/journey-panel";
+import { listEquiRelationLinks } from "@/server/assets/asset-relations";
 import { getEquiJourneyHint } from "@/server/journey/asset-handoffs";
 
 export const dynamic = "force-dynamic";
@@ -30,6 +33,12 @@ export default async function EquiDetailPage({ params }: Props) {
   });
 
   const canMove = canOperateSystronWarehouse(auth.effective.role, slug);
+  const relationLinks = await listEquiRelationLinks({
+    companyId: auth.activeCompany.id,
+    equiId: id,
+    clientId: detail.equi.clientId,
+  });
+
   const journeyHint = await getEquiJourneyHint({
     equiId: id,
     companyId: auth.activeCompany.id,
@@ -46,9 +55,15 @@ export default async function EquiDetailPage({ params }: Props) {
         <p className="text-sm text-slate-600">
           {detail.clientName} · {detail.typeName} · {detail.brandName} · {detail.equi.model}
         </p>
-        <p className="text-sm text-slate-500">Custodia: {detail.equi.custodyStatus}</p>
+        <p className="text-sm text-slate-500">
+          Custodia:{" "}
+          {equiCustodyLabel[detail.equi.custodyStatus ?? ""] ?? detail.equi.custodyStatus}
+        </p>
       </div>
-      <JourneyPanel hint={journeyHint} />
+      <JourneyPanel title="Qué falta para avanzar" hint={journeyHint} />
+      <DetailSection title="Relaciones navegables" description="§4.1 — historial operativo del equipo.">
+        <RelationLinks links={relationLinks} />
+      </DetailSection>
       {canMove && (
         <MovementActions
           entityKind="equi"

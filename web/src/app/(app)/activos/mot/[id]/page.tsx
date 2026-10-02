@@ -13,7 +13,10 @@ import { getMotIntercompanySubtotalHint } from "@/server/billing/fiscal-document
 import { canEmitFiscalDocument } from "@/server/rbac/billing";
 import { canManageQuotePricing } from "@/server/rbac/commercial";
 import { canOperateServomotoresCustody, canSeeMotors } from "@/server/rbac/assets";
+import { DetailSection, RelationLinks } from "@/components/discovery/detail-section";
+import { motIntakeLabel } from "@/lib/discovery/labels/assets";
 import { JourneyPanel } from "@/components/journey/journey-panel";
+import { listMotorRelationLinks } from "@/server/assets/asset-relations";
 import { getMotorJourneyHint } from "@/server/journey/asset-handoffs";
 
 export const dynamic = "force-dynamic";
@@ -45,6 +48,11 @@ export default async function MotDetailPage({ params }: Props) {
   const mirroredBitacora =
     slug === "SYSTRON" ? await listBitacoraForMotorReadonly(id) : [];
 
+  const relationLinks = await listMotorRelationLinks({
+    motorId: id,
+    clientId: detail.motor.clientId ?? null,
+  });
+
   const journeyHint = await getMotorJourneyHint({
     motorId: id,
     activeCompanyId: auth.activeCompany.id,
@@ -64,10 +72,14 @@ export default async function MotDetailPage({ params }: Props) {
         </p>
         <p className="text-sm text-slate-500">
           Origen {detail.originCompany?.name} · Custodia Servomotores:{" "}
-          {detail.motor.servomotoresIntakeStatus}
+          {motIntakeLabel[detail.motor.servomotoresIntakeStatus ?? ""] ??
+            detail.motor.servomotoresIntakeStatus}
         </p>
       </div>
-      <JourneyPanel hint={journeyHint} />
+      <JourneyPanel title="Qué falta para avanzar" hint={journeyHint} />
+      <DetailSection title="Relaciones navegables" description="§4.1 MOT global.">
+        <RelationLinks links={relationLinks} />
+      </DetailSection>
       <div className="flex flex-wrap gap-2">
         {slug === "SERVOMOTORES" &&
           detail.motor.origin === "SYSTRON" &&

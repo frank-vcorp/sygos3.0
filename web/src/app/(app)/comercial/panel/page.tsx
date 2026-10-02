@@ -25,8 +25,22 @@ export default async function PanelVentasPage() {
       <div>
         <h1 className="text-2xl font-semibold text-slate-900">Panel de ventas</h1>
         <p className="mt-1 text-sm text-slate-500">
-          Seguimiento comercial · {auth.activeCompany.name}
+          Seguimiento comercial §3.5 · {auth.activeCompany.name}
         </p>
+        <div className="mt-3 flex flex-wrap gap-3 text-sm">
+          <Link href="/comercial/cotizaciones?vista=pendientes-decision" className="text-sygos-teal">
+            Pendientes de decisión
+          </Link>
+          <Link href="/comercial/cotizaciones" className="text-sygos-teal">
+            Cotizaciones
+          </Link>
+          <Link href="/comercial/agenda" className="text-sygos-teal">
+            Agenda
+          </Link>
+          <Link href="/comercial/metas" className="text-sygos-teal">
+            Metas
+          </Link>
+        </div>
       </div>
 
       <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">

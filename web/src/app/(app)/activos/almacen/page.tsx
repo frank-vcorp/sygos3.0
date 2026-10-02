@@ -31,9 +31,15 @@ export default async function AlmacenPage() {
     ]);
     return (
       <div className="mx-auto max-w-4xl space-y-8">
-        <h1 className="text-2xl font-semibold">Almacén SYSTRON</h1>
+        <h1 className="text-2xl font-semibold">Custodia física — Almacén SYSTRON</h1>
         <p className="text-sm text-slate-600">
-          Entradas, resguardo y salidas de EQUI. Los MOT intercompañía no pasan por este almacén.
+          §5.1 — entradas, resguardo y salidas de EQUI. SLA técnico inicia con entrada confirmada.
+          MOT intercompañía no pasan por este almacén.
+        </p>
+        <p className="text-sm">
+          <Link href="/activos/equi?vista=pendiente-entrada" className="text-sygos-teal">
+            Listado EQUI pendiente entrada
+          </Link>
         </p>
         <Section title="Pendientes de entrada" rows={pending} hrefPrefix="/activos/equi" />
         <Section title="En resguardo" rows={custody} hrefPrefix="/activos/equi" />
@@ -60,8 +66,10 @@ export default async function AlmacenPage() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-8">
-      <h1 className="text-2xl font-semibold">Custodia Servomotores</h1>
-      <p className="text-sm text-slate-600">Ingresos, resguardo y egresos de MOT.</p>
+      <h1 className="text-2xl font-semibold">Custodia física — Servomotores</h1>
+      <p className="text-sm text-slate-600">
+        §5.1 — ingresos, resguardo y egresos de MOT; inicio de SLA al confirmar ingreso.
+      </p>
       <MotSection title="Pendientes de ingreso" rows={pending} />
       <MotSection title="En resguardo" rows={custody} />
     </div>

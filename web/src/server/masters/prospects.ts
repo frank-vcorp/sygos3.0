@@ -1,4 +1,4 @@
-import { and, desc, eq, ilike } from "drizzle-orm";
+import { and, desc, eq, ilike, inArray } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { clients, prospects, users } from "@/db/schema";
 import type { CompanySlug } from "@/lib/company";
@@ -8,11 +8,20 @@ import type { UserRole } from "@/db/schema";
 export async function listProspects(params: {
   companyId: string;
   q?: string;
+  status?: (typeof prospects.$inferSelect)["status"];
+  activePipelineOnly?: boolean;
 }) {
   const db = getDb();
   const conditions = [eq(prospects.companyId, params.companyId)];
   if (params.q?.trim()) {
     conditions.push(ilike(prospects.name, `%${params.q.trim()}%`));
+  }
+  if (params.status) {
+    conditions.push(eq(prospects.status, params.status));
+  } else if (params.activePipelineOnly) {
+    conditions.push(
+      inArray(prospects.status, ["NUEVO", "EN_SEGUIMIENTO"]),
+    );
   }
   return db
     .select({

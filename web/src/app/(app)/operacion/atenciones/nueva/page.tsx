@@ -35,7 +35,11 @@ export default async function NuevaAtencionPage() {
       <Link href="/operacion/tecnica" className="text-sm text-sky-800 hover:underline">
         ← Operación técnica
       </Link>
-      <h1 className="text-2xl font-semibold">Nueva atención</h1>
+      <h1 className="text-2xl font-semibold">Nueva atención técnica</h1>
+      <p className="text-sm text-slate-600">
+        §4.2 — obligatorio: cliente, EQUI/MOT, tipo (Diagnóstico / Reparación / Garantía), prioridad y
+        contexto. El SLA inicia con el ingreso físico, no al crear la atención.
+      </p>
       <AttentionCreateForm
         clients={clients.map((c) => ({ id: c.id, legalName: c.legalName }))}
         equiOptions={equi.map((e) => ({

@@ -4,6 +4,7 @@ import { ListShell } from "@/components/masters/list-shell";
 import { SearchForm } from "@/components/masters/search-form";
 import type { CompanySlug } from "@/lib/company";
 import { resolveCompanyIds } from "@/server/assets/context";
+import { motIntakeLabel } from "@/lib/discovery/labels/assets";
 import { listMotors } from "@/server/assets/motors";
 import { getAuthContext } from "@/server/auth/session";
 import { canCreateMotor, canSeeMotors } from "@/server/rbac/assets";
@@ -54,7 +55,8 @@ export default async function MotListPage({ searchParams }: Props) {
               <td className="px-4 py-3">{r.clientName}</td>
               <td className="px-4 py-3">{r.identification}</td>
               <td className="px-4 py-3">
-                {r.origin} · {r.servomotoresIntakeStatus}
+                {r.origin} ·{" "}
+                {motIntakeLabel[r.servomotoresIntakeStatus ?? ""] ?? r.servomotoresIntakeStatus}
               </td>
             </tr>
           ))}

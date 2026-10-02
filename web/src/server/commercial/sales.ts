@@ -7,7 +7,11 @@ import {
   quoteLines,
   quotes,
 } from "@/db/schema";
-import { formatSaleFolio, nextFolioValue } from "@/server/masters/folios";
+import {
+  formatQuoteFolio,
+  formatSaleFolio,
+  nextFolioValue,
+} from "@/server/masters/folios";
 
 export async function listEquipmentSales(companyId: string) {
   const db = getDb();
@@ -42,6 +46,17 @@ export async function getEquipmentSaleDetail(companyId: string, saleId: string) 
     .limit(1);
   if (!sale) return null;
 
+  const [client] = await db
+    .select({ legalName: clients.legalName })
+    .from(clients)
+    .where(eq(clients.id, sale.clientId))
+    .limit(1);
+  const [quote] = await db
+    .select({ folioNumber: quotes.folioNumber })
+    .from(quotes)
+    .where(eq(quotes.id, sale.quoteId))
+    .limit(1);
+
   const lines = await db
     .select({
       line: equipmentSaleLines,
@@ -55,6 +70,8 @@ export async function getEquipmentSaleDetail(companyId: string, saleId: string) 
   return {
     sale: { ...sale, folio: formatSaleFolio(sale.folioNumber) },
     lines,
+    clientName: client?.legalName ?? "—",
+    quoteFolio: quote ? formatQuoteFolio(quote.folioNumber) : "—",
   };
 }
 

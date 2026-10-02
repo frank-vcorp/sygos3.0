@@ -30,7 +30,7 @@ export default async function ClientesPage({ searchParams }: Props) {
   return (
     <ListShell
       title="Clientes"
-      description={`Catálogo comercial de ${auth.activeCompany.name}. Unicidad exacta por razón social.`}
+      description={`§3.1 — Clientes de ${auth.activeCompany.name}. Folio/razón social abre detalle con contactos y relaciones.`}
       createHref={canCreate ? "/comercial/clientes/nuevo" : undefined}
       searchSlot={
         <SearchForm

@@ -1,4 +1,7 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
+import { DetailSection } from "@/components/discovery/detail-section";
+import { equipmentSaleStatusLabel } from "@/lib/discovery/labels/sales";
 import { SaleLineActions } from "@/components/commercial/sale-line-actions";
 import { getEquipmentSaleDetail } from "@/server/commercial/sales";
 import { getAuthContext } from "@/server/auth/session";
@@ -33,24 +36,47 @@ export default async function VentaDetallePage({ params }: Props) {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <h1 className="text-2xl font-semibold">{detail.sale.folio}</h1>
-      <p className="text-sm text-slate-500">Estado: {detail.sale.status}</p>
-      <JourneyPanel hint={journeyHint} />
-      <ul className="space-y-4">
-        {detail.lines.map(({ line, concept }) => (
-          <li
-            key={line.id}
-            className="rounded-xl border border-slate-200 bg-white p-4 text-sm shadow-sm"
+      <Link href="/comercial/ventas" className="text-sm text-sygos-teal hover:underline">
+        ← Ventas de equipo
+      </Link>
+      <div>
+        <h1 className="text-2xl font-semibold">{detail.sale.folio}</h1>
+        <p className="text-sm text-slate-500">
+          {equipmentSaleStatusLabel[detail.sale.status] ?? detail.sale.status}
+        </p>
+      </div>
+      <JourneyPanel title="Qué falta para avanzar" hint={journeyHint} />
+      <DetailSection title="Origen comercial" description="§3.4 — líneas autorizadas desde cotización.">
+        <p>
+          Cliente: <span className="font-medium">{detail.clientName}</span>
+        </p>
+        <p>
+          Cotización:{" "}
+          <Link
+            href={`/comercial/cotizaciones/${detail.sale.quoteId}`}
+            className="text-sygos-teal hover:underline"
           >
-            <p className="font-medium">{concept}</p>
-            <p className="mt-1 text-slate-600">
-              Vendido: {line.quantitySold} · Recibido: {line.quantityReceived} · Entregado:{" "}
-              {line.quantityDelivered}
-            </p>
-            <SaleLineActions saleId={id} lineId={line.id} />
-          </li>
-        ))}
-      </ul>
+            {detail.quoteFolio}
+          </Link>
+        </p>
+      </DetailSection>
+      <DetailSection title="Líneas — recepción y entrega">
+        <ul className="space-y-4">
+          {detail.lines.map(({ line, concept }) => (
+            <li
+              key={line.id}
+              className="rounded-lg border border-slate-100 bg-slate-50/50 p-3"
+            >
+              <p className="font-medium">{concept}</p>
+              <p className="mt-1 text-slate-600">
+                Vendido: {line.quantitySold} · Recibido: {line.quantityReceived} · Entregado:{" "}
+                {line.quantityDelivered}
+              </p>
+              <SaleLineActions saleId={id} lineId={line.id} />
+            </li>
+          ))}
+        </ul>
+      </DetailSection>
     </div>
   );
 }

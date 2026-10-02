@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { ListShell } from "@/components/masters/list-shell";
 import { listReceivables } from "@/server/billing/ar-ap";
 import { formatMxn } from "@/server/commercial/money";
 import { getAuthContext } from "@/server/auth/session";
@@ -22,25 +23,27 @@ export default async function CobranzaPage() {
   });
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Cobranza (CxC)</h1>
-      <table className="min-w-full rounded-xl border bg-white text-sm shadow-sm">
+    <ListShell
+      title="Cobranza (CxC)"
+      description="§7.3 — saldos abiertos por cliente; navegación al documento fiscal y pagos validados."
+    >
+      <table className="min-w-full text-left text-sm">
         <thead className="border-b bg-slate-50 text-xs uppercase text-slate-500">
           <tr>
-            <th className="px-4 py-3 text-left">Cliente</th>
-            <th className="px-4 py-3 text-left">Documento</th>
-            <th className="px-4 py-3 text-left">Vence</th>
+            <th className="px-4 py-3">Cliente</th>
+            <th className="px-4 py-3">Documento</th>
+            <th className="px-4 py-3">Vence</th>
             <th className="px-4 py-3 text-right">Saldo</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody className="divide-y">
           {rows.map((r) => (
-            <tr key={r.arId} className="border-b border-slate-100">
+            <tr key={r.arId}>
               <td className="px-4 py-3">{r.clientName}</td>
               <td className="px-4 py-3">
                 <Link
                   href={`/administracion/cobranza/${r.arId}`}
-                  className="text-sygos-teal hover:underline"
+                  className="font-medium text-sygos-teal hover:underline"
                 >
                   {r.docKind}-{r.fiscalFolio}
                 </Link>
@@ -56,6 +59,6 @@ export default async function CobranzaPage() {
           ))}
         </tbody>
       </table>
-    </div>
+    </ListShell>
   );
 }

@@ -14,8 +14,15 @@ function initialPoStatus(creatorRole: UserRole) {
   return creatorRole === "CEO" ? "PENDIENTE_PROCESAR" : "PENDIENTE_AUTORIZACION";
 }
 
-export async function listPurchaseOrders(companyId: string) {
+export async function listPurchaseOrders(
+  companyId: string,
+  opts?: { pendingCeoOnly?: boolean },
+) {
   const db = getDb();
+  const conditions = [eq(purchaseOrders.companyId, companyId)];
+  if (opts?.pendingCeoOnly) {
+    conditions.push(eq(purchaseOrders.status, "PENDIENTE_AUTORIZACION"));
+  }
   return db
     .select({
       order: purchaseOrders,
@@ -25,7 +32,7 @@ export async function listPurchaseOrders(companyId: string) {
     .from(purchaseOrders)
     .leftJoin(suppliers, eq(suppliers.id, purchaseOrders.supplierId))
     .innerJoin(users, eq(users.id, purchaseOrders.requestedByUserId))
-    .where(eq(purchaseOrders.companyId, companyId))
+    .where(and(...conditions))
     .orderBy(desc(purchaseOrders.createdAt));
 }
 

@@ -30,7 +30,8 @@ export default async function InventarioPage() {
       <div>
         <h1 className="text-2xl font-semibold">Inventario de refacciones</h1>
         <p className="mt-1 text-sm text-slate-600">
-          {auth.activeCompany.name} · piezas · mín/máx informativos · importación con previsualización.
+          §5.2 — {auth.activeCompany.name} · refacciones · mín/máx informativos · importación con
+          previsualización.
         </p>
         {slug === "SERVOMOTORES" && !settings.servomotoresInventoryEnabled && (
           <p className="mt-2 text-sm text-amber-800">Capacidad deshabilitada (solo Admin).</p>

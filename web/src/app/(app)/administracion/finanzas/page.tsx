@@ -20,8 +20,11 @@ export default async function FinanzasDashboardPage() {
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold">Dashboard financiero</h1>
       <p className="text-sm text-slate-500">
-        Empresa activa · mes {dash.monthKey} · sin consolidado intercompañía.
+        §8.1 — empresa activa · mes {dash.monthKey} · sin consolidado intercompañía.
       </p>
+      <Link href="/administracion/hub" className="text-sm text-sygos-teal hover:underline">
+        ← Módulos administración
+      </Link>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {[
           { label: "Facturado", value: dash.facturadoMxn, href: "/administracion/facturacion" },
