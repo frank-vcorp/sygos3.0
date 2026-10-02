@@ -140,6 +140,74 @@ export async function cancelInvoiceWithFacturapi(params: {
   return { ok: true, simulated: false };
 }
 
+export type PayrollReceiptResult = {
+  receiptId: string;
+  uuid: string;
+  simulated: boolean;
+};
+
+export async function emitPayrollReceiptWithFacturapi(params: {
+  companyId: string;
+  actorUserId: string;
+  actorRole: UserRole;
+  idempotencyKey: string;
+  employee: { legal_name: string; tax_id: string; tax_system?: string };
+  amountMxn: number;
+  periodLabel: string;
+}): Promise<PayrollReceiptResult> {
+  if (
+    await shouldSimulateExternalEffects({
+      companyId: params.companyId,
+      userId: params.actorUserId,
+      role: params.actorRole,
+    })
+  ) {
+    return {
+      receiptId: `test-nom-${params.idempotencyKey.slice(0, 8)}`,
+      uuid: `00000000-0000-4000-8000-${params.idempotencyKey.replace(/-/g, "").slice(0, 12)}`,
+      simulated: true,
+    };
+  }
+
+  const apiKey = await getFacturapiApiKey(params.companyId);
+  if (!apiKey) {
+    throw new IntegrationMissingError(
+      "Facturapi",
+      "Configure Facturapi o active Modo de Pruebas para simular nómina.",
+    );
+  }
+
+  const res = await fetch("https://www.facturapi.io/v2/payroll-receipts", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      employee: params.employee,
+      type: "O",
+      payment: {
+        amount: params.amountMxn,
+        currency: "MXN",
+      },
+      idempotency_key: params.idempotencyKey,
+      memo: `Nómina ${params.periodLabel}`,
+    }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text.slice(0, 500) || `Facturapi nómina HTTP ${res.status}`);
+  }
+
+  const data = (await res.json()) as { id: string; uuid?: string };
+  return {
+    receiptId: data.id,
+    uuid: data.uuid ?? data.id,
+    simulated: false,
+  };
+}
+
 export async function probeFacturapiConnection(companyId: string): Promise<{
   ok: boolean;
   message: string;

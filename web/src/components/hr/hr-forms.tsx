@@ -20,6 +20,9 @@ export function EmployeeCreateForm() {
             dailySalaryStampedMxn: Number(fd.get("dailySalaryStampedMxn")),
             dailySalaryCashMxn: Number(fd.get("dailySalaryCashMxn")),
             vacationBalanceDays: Number(fd.get("vacationBalanceDays") || 0),
+            taxRfc: fd.get("taxRfc") || undefined,
+            taxCurp: fd.get("taxCurp") || undefined,
+            taxZip: fd.get("taxZip") || undefined,
           }),
         });
         router.refresh();
@@ -34,6 +37,9 @@ export function EmployeeCreateForm() {
       <input name="dailySalaryStampedMxn" type="number" min={0} placeholder="Salario diario timbrado" className="w-full rounded border px-3 py-2" />
       <input name="dailySalaryCashMxn" type="number" min={0} placeholder="Salario diario efectivo" className="w-full rounded border px-3 py-2" />
       <input name="vacationBalanceDays" type="number" min={0} placeholder="Saldo vacaciones (migrado)" className="w-full rounded border px-3 py-2" />
+      <input name="taxRfc" placeholder="RFC (timbrado nómina)" className="w-full rounded border px-3 py-2" />
+      <input name="taxCurp" placeholder="CURP (opcional)" className="w-full rounded border px-3 py-2" />
+      <input name="taxZip" placeholder="CP fiscal (opcional)" className="w-full rounded border px-3 py-2" />
       <button type="submit" className="rounded-lg bg-sygos-navy px-4 py-2 text-white">
         Alta colaborador
       </button>
@@ -85,11 +91,22 @@ export function HrActionButton(props: { href: string; body: Record<string, unkno
       type="button"
       className="rounded bg-sygos-navy px-2 py-1 text-xs text-white"
       onClick={async () => {
-        await fetch(props.href, {
+        const res = await fetch(props.href, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(props.body),
         });
+        if (!res.ok) {
+          const data = (await res.json().catch(() => ({}))) as {
+            error?: string;
+            issues?: { legalName: string; reason: string }[];
+          };
+          const extra =
+            data.issues?.map((i) => `${i.legalName}: ${i.reason}`).join("\n") ??
+            "";
+          window.alert([data.error, extra].filter(Boolean).join("\n\n"));
+          return;
+        }
         router.refresh();
       }}
     >

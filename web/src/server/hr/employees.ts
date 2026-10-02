@@ -40,6 +40,9 @@ export async function createEmployee(params: {
   dailySalaryStampedMxn: number;
   dailySalaryCashMxn: number;
   vacationBalanceDays?: number;
+  taxRfc?: string;
+  taxCurp?: string;
+  taxZip?: string;
   userRole?: UserRole;
 }) {
   const db = getDb();
@@ -54,6 +57,9 @@ export async function createEmployee(params: {
       managerEmployeeId: params.managerEmployeeId ?? null,
       dailySalaryStampedMxn: params.dailySalaryStampedMxn,
       dailySalaryCashMxn: params.dailySalaryCashMxn,
+      taxRfc: params.taxRfc?.trim() || null,
+      taxCurp: params.taxCurp?.trim() || null,
+      taxZip: params.taxZip?.trim() || null,
       vacationBalanceDays: params.vacationBalanceDays ?? 0,
       attendanceExempt:
         params.userRole ? attendanceExemptForRole(params.userRole) : false,

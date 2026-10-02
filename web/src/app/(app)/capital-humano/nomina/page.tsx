@@ -38,18 +38,36 @@ export default async function NominaPage() {
             label="Generar aguinaldo (año actual)"
           />
           {latest?.status === "BORRADOR" && canAuthorizePayroll(auth.effective.role) && (
-            <HrActionButton
-              href={`/api/hr/payroll/${latest.id}/authorize`}
-              body={{}}
-              label="Autorizar nómina (CEO/Admin)"
-            />
+            <>
+              <HrActionButton
+                href={`/api/hr/payroll/${latest.id}/authorize`}
+                body={{}}
+                label="Autorizar nómina (CEO/Admin)"
+              />
+              {latest.fiscalStatus === "ERROR" && (
+                <HrActionButton
+                  href={`/api/hr/payroll/${latest.id}/retry-stamp`}
+                  body={{}}
+                  label="Reintentar timbrado"
+                />
+              )}
+            </>
+          )}
+          {latest && (
+            <Link
+              href={`/capital-humano/nomina/${latest.id}/imprimir`}
+              className="rounded border px-2 py-1 text-xs text-sygos-teal"
+            >
+              Imprimir recibo interno
+            </Link>
           )}
         </div>
       )}
       <ul className="divide-y rounded-xl border bg-white text-sm">
         {runs.map((r) => (
           <li key={r.id} className="px-4 py-3">
-            {formatPayrollFolio(r.folioNumber)} · {r.weekKey} · {r.runKind} · {r.status}
+            {formatPayrollFolio(r.folioNumber)} · {r.weekKey} · {r.runKind} · {r.status} ·{" "}
+            fiscal {r.fiscalStatus}
           </li>
         ))}
       </ul>

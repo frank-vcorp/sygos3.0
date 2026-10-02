@@ -1,4 +1,6 @@
+import { randomUUID } from "crypto";
 import { and, desc, eq } from "drizzle-orm";
+import type { UserRole } from "@/db/schema";
 import { getDb } from "@/db/client";
 import {
   employees,
@@ -12,6 +14,10 @@ import {
   buildMonthlyBonusLines,
   computeAguinaldoMxn,
 } from "@/server/hr/payroll-bonuses";
+import {
+  stampPayrollRun,
+  validatePayrollStampReadiness,
+} from "@/server/hr/payroll-fiscal";
 
 export function currentIsoWeekKey(date = new Date()) {
   const d = new Date(date);
@@ -57,6 +63,7 @@ export async function generatePayrollDraft(params: {
       runKind: "SEMANAL",
       folioNumber,
       status: "BORRADOR",
+      stampIdempotencyKey: randomUUID(),
     })
     .returning();
 
@@ -186,6 +193,7 @@ export async function generateAguinaldoDraft(params: {
       runKind: "AGUINALDO",
       folioNumber,
       status: "BORRADOR",
+      stampIdempotencyKey: randomUUID(),
     })
     .returning();
 
@@ -289,7 +297,22 @@ export async function authorizePayroll(params: {
   companyId: string;
   payrollRunId: string;
   authorizerUserId: string;
+  authorizerRole: UserRole;
 }) {
+  const issues = await validatePayrollStampReadiness(params.payrollRunId);
+  if (issues.length) {
+    const err = new Error("PAYROLL_FISCAL_DATA_MISSING");
+    (err as Error & { issues: typeof issues }).issues = issues;
+    throw err;
+  }
+
+  await stampPayrollRun({
+    companyId: params.companyId,
+    payrollRunId: params.payrollRunId,
+    actorUserId: params.authorizerUserId,
+    actorRole: params.authorizerRole,
+  });
+
   const db = getDb();
   const [run] = await db
     .update(payrollRuns)

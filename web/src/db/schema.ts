@@ -1594,6 +1594,14 @@ export const payrollRunKindEnum = pgEnum("payroll_run_kind", [
   "AGUINALDO",
 ]);
 
+export const payrollFiscalStatusEnum = pgEnum("payroll_fiscal_status", [
+  "NO_APLICA",
+  "PENDIENTE",
+  "TIMBRADA",
+  "ERROR",
+  "SIMULADA",
+]);
+
 export const commissionStatusEnum = pgEnum("commission_status", [
   "DEVENGADA",
   "PAGADA",
@@ -1614,6 +1622,9 @@ export const employees = pgTable(
     managerEmployeeId: uuid("manager_employee_id"),
     dailySalaryStampedMxn: integer("daily_salary_stamped_mxn").default(0).notNull(),
     dailySalaryCashMxn: integer("daily_salary_cash_mxn").default(0).notNull(),
+    taxRfc: text("tax_rfc"),
+    taxCurp: text("tax_curp"),
+    taxZip: text("tax_zip"),
     vacationBalanceDays: integer("vacation_balance_days").default(0).notNull(),
     kioskEnabled: boolean("kiosk_enabled").default(true).notNull(),
     attendanceExempt: boolean("attendance_exempt").default(false).notNull(),
@@ -1699,6 +1710,11 @@ export const payrollRuns = pgTable(
     runKind: payrollRunKindEnum("run_kind").default("SEMANAL").notNull(),
     folioNumber: integer("folio_number").notNull(),
     status: payrollRunStatusEnum("status").default("BORRADOR").notNull(),
+    fiscalStatus: payrollFiscalStatusEnum("fiscal_status")
+      .default("NO_APLICA")
+      .notNull(),
+    lastFiscalError: text("last_fiscal_error"),
+    stampIdempotencyKey: text("stamp_idempotency_key"),
     authorizedByUserId: uuid("authorized_by_user_id").references(() => users.id),
     authorizedAt: timestamp("authorized_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
@@ -1734,7 +1750,25 @@ export const payrollLines = pgTable("payroll_lines", {
   ),
 });
 
-export const commissionAccruals = pgTable("commission_accruals", {
+export const payrollFiscalReceipts = pgTable("payroll_fiscal_receipts", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  payrollRunId: uuid("payroll_run_id")
+    .notNull()
+    .references(() => payrollRuns.id, { onDelete: "cascade" }),
+  employeeId: uuid("employee_id")
+    .notNull()
+    .references(() => employees.id),
+  amountStampedMxn: integer("amount_stamped_mxn").notNull(),
+  status: payrollFiscalStatusEnum("status").default("PENDIENTE").notNull(),
+  facturapiReceiptId: text("facturapi_receipt_id"),
+  facturapiUuid: text("facturapi_uuid"),
+  lastError: text("last_error"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const commissionAccruals = pgTable("commission_acruals", {
   id: uuid("id").defaultRandom().primaryKey(),
   companyId: uuid("company_id")
     .notNull()

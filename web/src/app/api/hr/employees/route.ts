@@ -22,6 +22,9 @@ const postSchema = z.object({
   dailySalaryStampedMxn: z.number().int().min(0),
   dailySalaryCashMxn: z.number().int().min(0),
   vacationBalanceDays: z.number().int().min(0).optional(),
+  taxRfc: z.string().optional(),
+  taxCurp: z.string().optional(),
+  taxZip: z.string().optional(),
 });
 
 export async function POST(request: Request) {
@@ -41,6 +44,9 @@ export async function POST(request: Request) {
       dailySalaryStampedMxn: body.dailySalaryStampedMxn,
       dailySalaryCashMxn: body.dailySalaryCashMxn,
       vacationBalanceDays: body.vacationBalanceDays,
+      taxRfc: body.taxRfc,
+      taxCurp: body.taxCurp,
+      taxZip: body.taxZip,
     });
     return NextResponse.json({ employee }, { status: 201 });
   } catch {

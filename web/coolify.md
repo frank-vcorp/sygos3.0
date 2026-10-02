@@ -27,3 +27,7 @@ No configurar Facturapi/SendGrid/WhatsApp en env: van por UI del producto.
 2. `POST https://sygos3-0.systronia.com/api/setup/ensure-systronia` con JSON `{"setupKey":"…","password":"…"}` (mín. 10 caracteres).
 3. Login con **Systronia** y esa contraseña → cambio obligatorio.
 4. **Quitar** `SETUP_BOOTSTRAP_KEY` y redeploy.
+
+## Producción
+
+Ver [docs/PRODUCCION.md](./docs/PRODUCCION.md) para duplicar la app en Coolify con FQDN definitivo.
