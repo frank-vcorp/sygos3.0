@@ -9,7 +9,11 @@ import { companies } from "@/db/schema";
 import { companySlugToLabel, type CompanySlug } from "@/lib/company";
 import { getAuthContext } from "@/server/auth/session";
 import { TestModeBanner } from "@/components/shell/test-mode-banner";
-import { shouldShowTestModeBanner } from "@/server/integrations/external-policy";
+import { InternalFiscalBanner } from "@/components/shell/internal-fiscal-banner";
+import {
+  shouldShowInternalFiscalBanner,
+  shouldShowTestModeBanner,
+} from "@/server/integrations/external-policy";
 import { getMissingIntegrations } from "@/server/integrations/status";
 import {
   canManageIntegrations,
@@ -42,6 +46,7 @@ export default async function AppLayout({
     (c) => c.slug as CompanySlug,
   );
   const activeSlug = auth.activeCompany.slug as CompanySlug;
+  const internalFiscalBanner = shouldShowInternalFiscalBanner();
   const [missingIntegrations, testModeBanner] = await Promise.all([
     getMissingIntegrations(auth.activeCompany.id),
     shouldShowTestModeBanner({
@@ -89,7 +94,8 @@ export default async function AppLayout({
             companyName={auth.activeCompany.name}
           />
         )}
-        {testModeBanner && <TestModeBanner />}
+        {internalFiscalBanner && <InternalFiscalBanner />}
+        {testModeBanner && !internalFiscalBanner && <TestModeBanner />}
         <ContextBanners
           activeCompany={companySlugToLabel(activeSlug)}
           missingIntegrations={missingIntegrations}

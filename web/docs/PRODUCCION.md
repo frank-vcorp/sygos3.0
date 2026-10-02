@@ -5,7 +5,7 @@ Staging actual: https://sygos3-0.systronia.com
 ## Checklist
 
 1. **Coolify** — Duplicar app o nuevo FQDN prod (ej. `sygos.systronia.com` o dominio cliente).
-2. **Secrets** — `DATABASE_URL`, `ENCRYPTION_KEY` (≥32 chars), quitar `ADMIN_INITIAL_PASSWORD` tras seed.
+2. **Secrets** — `DATABASE_URL`, `ENCRYPTION_KEY` (≥32 chars), quitar `ADMIN_INITIAL_PASSWORD` tras seed. **No** usar `SYGOS_INTERNAL_FISCAL` (solo staging UAT).
 3. **Integraciones** — Facturapi/SendGrid por empresa en UI (no en env del repo).
 4. **Modo de pruebas** — Desactivado en producción salvo ventanas controladas.
 5. **Migraciones** — El entrypoint ejecuta `npm run db:migrate` en cada deploy.

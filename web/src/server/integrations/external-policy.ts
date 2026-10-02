@@ -1,4 +1,5 @@
 import type { UserRole } from "@/db/schema";
+import { isInternalFiscalMode } from "@/server/config/internal-fiscal";
 import { isTestModeEnabled } from "@/server/config/test-mode";
 import { isUserInActiveTestSession } from "@/server/config/test-mode-session";
 
@@ -21,4 +22,13 @@ export async function shouldShowTestModeBanner(params: {
   role: UserRole;
 }): Promise<boolean> {
   return shouldSimulateExternalEffects(params);
+}
+
+/** Timbrado SAT omitido; documentos quedan emitidos solo en SYGOS (staging UAT). */
+export function shouldUseInternalFiscalOnly(): boolean {
+  return isInternalFiscalMode();
+}
+
+export function shouldShowInternalFiscalBanner(): boolean {
+  return isInternalFiscalMode();
 }

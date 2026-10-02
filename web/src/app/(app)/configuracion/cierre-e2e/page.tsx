@@ -37,6 +37,7 @@ const SECTIONS = [
     title: "Fiscal e integraciones",
     items: [
       "Sin Facturapi configurada: no simular éxito en producción.",
+      "Staging UAT: SYGOS_INTERNAL_FISCAL=1 (ver docs/STAGING-UAT.md).",
       "Modo de pruebas: simulación PRUEBA / SIN VALIDEZ.",
       "Error fiscal permite reintento sin duplicar (idempotency key).",
       "Integraciones habilitadas sin credenciales muestran aviso.",

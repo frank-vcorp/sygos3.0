@@ -19,7 +19,11 @@ Obligatorias para login y cifrado de integraciones:
 
 Opcional: `NODE_ENV=production`
 
-No configurar Facturapi/SendGrid/WhatsApp en env: van por UI del producto.
+### UAT sin integraciones (recomendado en este staging)
+
+`SYGOS_INTERNAL_FISCAL=1` — facturas y nómina cierran en SYGOS sin llamar a Facturapi. Ver [docs/STAGING-UAT.md](./docs/STAGING-UAT.md).
+
+No configurar Facturapi/SendGrid/WhatsApp en env: van por UI del producto (o déjalas deshabilitadas en UAT).
 
 ### Recuperar acceso Systronia (solo si falla el login)
 

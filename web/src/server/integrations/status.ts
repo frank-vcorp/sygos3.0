@@ -4,6 +4,7 @@ import {
   companyIntegrations,
   type IntegrationProvider,
 } from "@/db/schema";
+import { isInternalFiscalMode } from "@/server/config/internal-fiscal";
 
 const PROVIDERS: IntegrationProvider[] = [
   "facturapi",
@@ -20,6 +21,9 @@ const LABELS: Record<IntegrationProvider, string> = {
 export async function getMissingIntegrations(
   companyId: string,
 ): Promise<string[]> {
+  if (isInternalFiscalMode()) {
+    return [];
+  }
   const db = getDb();
   const rows = await db
     .select()

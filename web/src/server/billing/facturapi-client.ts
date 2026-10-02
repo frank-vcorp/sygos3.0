@@ -2,7 +2,10 @@ import { and, eq } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { companyIntegrations, type UserRole } from "@/db/schema";
 import { decryptJson } from "@/server/crypto/secrets";
-import { shouldSimulateExternalEffects } from "@/server/integrations/external-policy";
+import {
+  shouldSimulateExternalEffects,
+  shouldUseInternalFiscalOnly,
+} from "@/server/integrations/external-policy";
 import { IntegrationMissingError } from "@/server/integrations/errors";
 
 export type FacturapiEmitResult = {
@@ -33,13 +36,21 @@ export async function getFacturapiApiKey(
 
 function simulatedInvoice(params: {
   idempotencyKey: string;
-  prefix: "test" | "sim";
+  prefix: "test" | "sim" | "internal";
 }) {
   return {
     invoiceId: `${params.prefix}-${params.idempotencyKey.slice(0, 8)}`,
     uuid: `00000000-0000-4000-8000-${params.idempotencyKey.replace(/-/g, "").slice(0, 12)}`,
     simulated: true,
   };
+}
+
+function isSimulatedExternalId(id: string): boolean {
+  return (
+    id.startsWith("test-") ||
+    id.startsWith("sim-") ||
+    id.startsWith("internal-")
+  );
 }
 
 export async function emitInvoiceWithFacturapi(params: {
@@ -61,6 +72,13 @@ export async function emitInvoiceWithFacturapi(params: {
     return simulatedInvoice({
       idempotencyKey: params.idempotencyKey,
       prefix: "test",
+    });
+  }
+
+  if (shouldUseInternalFiscalOnly()) {
+    return simulatedInvoice({
+      idempotencyKey: params.idempotencyKey,
+      prefix: "internal",
     });
   }
 
@@ -104,10 +122,7 @@ export async function cancelInvoiceWithFacturapi(params: {
   actorRole: UserRole;
   facturapiInvoiceId: string;
 }) {
-  if (
-    params.facturapiInvoiceId.startsWith("test-") ||
-    params.facturapiInvoiceId.startsWith("sim-")
-  ) {
+  if (isSimulatedExternalId(params.facturapiInvoiceId)) {
     return { ok: true, simulated: true };
   }
 
@@ -169,6 +184,14 @@ export async function emitPayrollReceiptWithFacturapi(params: {
     };
   }
 
+  if (shouldUseInternalFiscalOnly()) {
+    return {
+      receiptId: `internal-nom-${params.idempotencyKey.slice(0, 8)}`,
+      uuid: `00000000-0000-4000-8000-${params.idempotencyKey.replace(/-/g, "").slice(0, 12)}`,
+      simulated: true,
+    };
+  }
+
   const apiKey = await getFacturapiApiKey(params.companyId);
   if (!apiKey) {
     throw new IntegrationMissingError(
@@ -212,6 +235,13 @@ export async function probeFacturapiConnection(companyId: string): Promise<{
   ok: boolean;
   message: string;
 }> {
+  if (shouldUseInternalFiscalOnly()) {
+    return {
+      ok: true,
+      message:
+        "Staging UAT: fiscal interno activo (SYGOS_INTERNAL_FISCAL). Sin llamadas a Facturapi.",
+    };
+  }
   const apiKey = await getFacturapiApiKey(companyId);
   if (!apiKey) {
     return { ok: false, message: "Sin API key o integración deshabilitada." };
