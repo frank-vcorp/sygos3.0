@@ -3,6 +3,7 @@ import { NewQuoteForm } from "@/components/commercial/commercial-forms";
 import { listClients } from "@/server/masters/clients";
 import { getAuthContext } from "@/server/auth/session";
 import { canCreateQuoteAsVendor } from "@/server/rbac/commercial";
+import { canCreateClient } from "@/server/rbac/masters";
 import type { CompanySlug } from "@/lib/company";
 
 export const dynamic = "force-dynamic";
@@ -22,7 +23,10 @@ export default async function NuevaCotizacionPage() {
         Captura contexto comercial sin precio. CEO/Administrador fija el importe en pendientes de
         cotizar.
       </p>
-      <NewQuoteForm clients={clients.map((c) => ({ id: c.id, legalName: c.legalName }))} />
+      <NewQuoteForm
+        clients={clients.map((c) => ({ id: c.id, legalName: c.legalName }))}
+        canQuickCreateClient={canCreateClient(auth.effective.role, slug)}
+      />
     </div>
   );
 }

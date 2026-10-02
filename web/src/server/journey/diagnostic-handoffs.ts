@@ -73,7 +73,7 @@ export async function getDiagnosticJourneyHint(params: {
     }
     return {
       message: "Diagnóstico validado — debe aparecer en Pendientes de cotizar.",
-      href: "/comercial/pendientes-cotizar",
+      href: "/comercial/cotizaciones?vista=pendientes-cotizar",
     };
   }
 

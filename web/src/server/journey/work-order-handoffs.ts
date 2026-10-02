@@ -45,7 +45,7 @@ export async function getWorkOrderJourneyHint(params: {
     }
     return {
       message: "Reparación terminada — debe generarse pendiente de cotizar (CEO).",
-      href: "/comercial/pendientes-cotizar",
+      href: "/comercial/cotizaciones?vista=pendientes-cotizar",
     };
   }
 

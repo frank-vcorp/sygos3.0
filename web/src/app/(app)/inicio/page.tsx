@@ -30,16 +30,6 @@ export default async function InicioPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <h1 className="text-2xl font-semibold">Inicio</h1>
-      <section className="rounded-xl border border-amber-100 bg-amber-50/50 p-4 text-sm">
-        <p className="font-medium text-amber-950">Validación por recorridos</p>
-        <p className="mt-1 text-amber-900">
-          Sigue el mapa de recorridos y el panel amarillo en cada detalle (cotización, diagnóstico,
-          OS, MOT, compras, factura).
-        </p>
-        <Link href="/operacion/recorrido" className="mt-2 inline-block font-medium text-sygos-teal">
-          Abrir mapa UAT →
-        </Link>
-      </section>
       <div className="flex flex-wrap gap-3 text-sm">
         {canSeeCeoPanel(auth.effective.role) && (
           <Link href="/paneles/ceo" className="text-sygos-teal">

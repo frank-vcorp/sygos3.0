@@ -2,15 +2,17 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { ClientPickerQuick } from "@/components/commercial/client-picker-quick";
 
 type Line = { concept: string; quantity: number };
 
 export function NewQuoteForm(props: {
   clients: { id: string; legalName: string }[];
+  canQuickCreateClient?: boolean;
 }) {
   const router = useRouter();
   const [clientId, setClientId] = useState(props.clients[0]?.id ?? "");
-  const [quoteType, setQuoteType] = useState("REPARACION_SERVICIO");
+  const [quoteType, setQuoteType] = useState("SERVICIO_CAMPO");
   const [lines, setLines] = useState<Line[]>([{ concept: "", quantity: 1 }]);
   const [prelimModel, setPrelimModel] = useState("");
   const [prelimBrand, setPrelimBrand] = useState("");
@@ -20,6 +22,15 @@ export function NewQuoteForm(props: {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (!clientId) {
+      setError("Selecciona o crea un cliente.");
+      return;
+    }
+    const validLines = lines.filter((l) => l.concept.trim());
+    if (validLines.length === 0) {
+      setError("Indica al menos un concepto o servicio solicitado (sin precio).");
+      return;
+    }
     setLoading(true);
     setError(null);
     const res = await fetch("/api/commercial/quotes", {
@@ -31,12 +42,13 @@ export function NewQuoteForm(props: {
         prelimEquipmentType: prelimType || undefined,
         prelimBrand: prelimBrand || undefined,
         prelimModel: prelimModel || undefined,
-        lines: lines.filter((l) => l.concept.trim()),
+        lines: validLines,
       }),
     });
     setLoading(false);
     if (!res.ok) {
-      setError("No se pudo crear la cotización.");
+      const data = await res.json().catch(() => ({}));
+      setError(data.error ?? "No se pudo crear la cotización.");
       return;
     }
     const data = await res.json();
@@ -46,21 +58,12 @@ export function NewQuoteForm(props: {
 
   return (
     <form onSubmit={submit} className="space-y-4">
-      <label className="block text-sm">
-        Cliente
-        <select
-          className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"
-          value={clientId}
-          onChange={(e) => setClientId(e.target.value)}
-          required
-        >
-          {props.clients.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.legalName}
-            </option>
-          ))}
-        </select>
-      </label>
+      <ClientPickerQuick
+        initialClients={props.clients}
+        canQuickCreate={props.canQuickCreateClient ?? false}
+        clientId={clientId}
+        onClientIdChange={setClientId}
+      />
       <label className="block text-sm">
         Tipo
         <select
@@ -76,7 +79,7 @@ export function NewQuoteForm(props: {
       </label>
       <div className="grid gap-2 sm:grid-cols-3">
         <input
-          placeholder="Tipo equipo (preliminar)"
+          placeholder="Tipo equipo (preliminar, opcional)"
           className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
           value={prelimType}
           onChange={(e) => setPrelimType(e.target.value)}
@@ -94,11 +97,15 @@ export function NewQuoteForm(props: {
           onChange={(e) => setPrelimModel(e.target.value)}
         />
       </div>
+      <p className="text-xs text-slate-500">
+        Solo contexto comercial — <strong>no captures precio</strong>; queda en pendiente de cotizar
+        para CEO/Administrador.
+      </p>
       {lines.map((line, i) => (
         <div key={i} className="flex gap-2">
           <input
             className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm"
-            placeholder="Concepto"
+            placeholder="Servicio o concepto solicitado *"
             value={line.concept}
             onChange={(e) => {
               const next = [...lines];

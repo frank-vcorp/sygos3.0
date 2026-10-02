@@ -6,7 +6,7 @@ import { Home, Settings, SlidersHorizontal, Users } from "lucide-react";
 import { SygosLogo } from "@/components/brand/sygos-logo";
 import { appNavSections } from "@/lib/nav";
 import type { UserRole } from "@/db/schema";
-import { canSeeNavSection } from "@/server/rbac/roles";
+import { canSeeNavItem, canSeeNavSection } from "@/server/rbac/roles";
 
 type AppSidebarProps = {
   activeCompany: string;
@@ -17,23 +17,16 @@ type AppSidebarProps = {
   activePath?: string;
 };
 
-const sectionKey: Record<
-  string,
-  | "comercial"
-  | "activos"
-  | "operacion"
-  | "administracion"
-  | "capital-humano"
-  | "paneles"
-> = {
-  Recorrido: "operacion",
-  "1 · Comercial": "comercial",
-  "2 · Activos y custodia": "activos",
-  "3 · Operación técnica": "operacion",
-  "4 · Abastecimiento": "operacion",
-  "5 · Capital humano": "capital-humano",
-  "6 · Paneles por rol": "paneles",
-  "7 · Administración y finanzas": "administracion",
+import type { NavSectionKey } from "@/server/rbac/nav";
+
+const sectionKey: Record<string, NavSectionKey> = {
+  Comercial: "comercial",
+  "Custodia e inventario": "activos",
+  "Operación técnica": "operacion",
+  "Compras y proveedores": "compras",
+  "Personal y nómina": "capital-humano",
+  Paneles: "paneles",
+  "Facturación y finanzas": "administracion",
 };
 
 export function AppSidebar({
@@ -76,14 +69,18 @@ export function AppSidebar({
         {appNavSections.map((section) => {
           const key = sectionKey[section.title];
           if (key && !canSeeNavSection(effectiveRole, key)) return null;
+          const items = section.items.filter((item) =>
+            canSeeNavItem(effectiveRole, item.id),
+          );
+          if (items.length === 0) return null;
           return (
             <div key={section.title} className="mb-5">
               <p className="mb-2 px-3 text-[10px] font-semibold tracking-wider text-slate-500">
                 {section.title.toUpperCase()}
               </p>
               <ul className="space-y-0.5">
-                {section.items.map((item) => (
-                  <li key={item.label}>
+                {items.map((item) => (
+                  <li key={item.id}>
                     <Link href={item.href} className={linkClass(item.href)}>
                       {item.label}
                     </Link>

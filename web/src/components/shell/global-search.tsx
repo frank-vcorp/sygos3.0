@@ -55,6 +55,8 @@ export function GlobalSearch({ enabled }: { enabled: boolean }) {
     return () => document.removeEventListener("mousedown", onDoc);
   }, []);
 
+  if (!enabled) return null;
+
   return (
     <div ref={wrapRef} className="relative mx-auto w-full max-w-md flex-1 basis-full sm:basis-auto">
       <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -63,13 +65,8 @@ export function GlobalSearch({ enabled }: { enabled: boolean }) {
         value={q}
         onChange={(e) => setQ(e.target.value)}
         onFocus={() => hits.length > 0 && setOpen(true)}
-        placeholder={
-          enabled
-            ? "Buscar clientes, EQUI, MOT, folio…"
-            : "Búsqueda global (CEO/Admin)"
-        }
-        disabled={!enabled}
-        className="w-full rounded-lg border border-slate-200 py-2 pl-9 pr-3 text-sm outline-none focus:border-sygos-teal focus:ring-1 focus:ring-sygos-teal/30 disabled:bg-slate-50 disabled:text-slate-400"
+        placeholder="Buscar clientes, EQUI, MOT, folio…"
+        className="w-full rounded-lg border border-slate-200 py-2 pl-9 pr-3 text-sm outline-none focus:border-sygos-teal focus:ring-1 focus:ring-sygos-teal/30"
       />
       {enabled && open && (hits.length > 0 || loading) && (
         <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-80 overflow-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg">

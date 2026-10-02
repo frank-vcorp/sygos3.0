@@ -258,7 +258,7 @@ export async function getQuoteJourneyHint(params: {
   if (q.quoteOrigin === "MOT_BASE_SERVOMOTORES" && q.status === "PENDIENTE_COTIZAR") {
     return {
       message: "Gerente SM / CEO SM: precio base hacia SYSTRON (intercompañía).",
-      href: "/comercial/pendientes-cotizar",
+      href: "/comercial/cotizaciones?vista=pendientes-cotizar",
     };
   }
   if (q.linkedQuoteId && q.status === "PENDIENTE_COTIZAR") {
@@ -271,7 +271,7 @@ export async function getQuoteJourneyHint(params: {
   if (q.status === "PENDIENTE_COTIZAR") {
     return {
       message: "Falta precio: CEO/Administrador en Pendientes de cotizar.",
-      href: "/comercial/pendientes-cotizar",
+      href: "/comercial/cotizaciones?vista=pendientes-cotizar",
     };
   }
   if (q.status === "PENDIENTE_DECISION") {

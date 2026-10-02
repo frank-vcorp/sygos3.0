@@ -205,7 +205,10 @@ export async function buildGerenteSmPanel(params: {
     activeDiagnostics: diagnostics.slice(0, 12),
     warrantyDiagnostics: warrantyOpen.slice(0, 12),
     quickLinks: [
-      { href: "/comercial/pendientes-cotizar", label: "Pendientes de cotizar" },
+      {
+        href: "/comercial/cotizaciones?vista=pendientes-cotizar",
+        label: "Pendientes de cotizar",
+      },
       { href: "/operacion/compras", label: "Compras directas" },
       { href: "/comercial/ventas", label: "Entregas de venta" },
       { href: "/activos/mot", label: "Ingreso físico MOT" },
