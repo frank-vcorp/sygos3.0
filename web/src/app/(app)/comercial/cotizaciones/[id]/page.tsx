@@ -19,6 +19,7 @@ import {
   canSeeCommercialModule,
   canSeeIntercompanyBase,
 } from "@/server/rbac/commercial";
+import { canCreateEqui } from "@/server/rbac/assets";
 
 export const dynamic = "force-dynamic";
 

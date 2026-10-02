@@ -85,7 +85,15 @@ export async function POST(request: Request) {
       complementNotes: body.complementNotes,
       contactIds: body.contactIds,
       lines: body.lines,
-      awaitingPhysicalAsset: !body.equiId && !body.motorId,
+      awaitingPhysicalAsset:
+        !body.equiId &&
+        !body.motorId &&
+        Boolean(
+          body.prelimEquipmentType ||
+            body.prelimBrand ||
+            body.prelimModel ||
+            body.prelimSerial,
+        ),
     });
     return NextResponse.json({ quote }, { status: 201 });
   } catch {

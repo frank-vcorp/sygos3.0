@@ -19,8 +19,10 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const q = url.searchParams.get("q") ?? undefined;
   const custodyStatus = url.searchParams.get("custody") ?? undefined;
+  const clientId = url.searchParams.get("clientId") ?? undefined;
   const rows = await listEquiUnits({
     companyId: auth.activeCompany.id,
+    clientId,
     q,
     custodyStatus,
   });

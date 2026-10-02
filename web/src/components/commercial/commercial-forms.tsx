@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ClientPickerQuick } from "@/components/commercial/client-picker-quick";
+import { QuoteEquipmentSection } from "@/components/commercial/quote-equipment-section";
 
 type Line = { concept: string; quantity: number };
 
@@ -30,14 +31,18 @@ function defaultConceptFromContext(params: {
 export function NewQuoteForm(props: {
   clients: { id: string; legalName: string }[];
   canQuickCreateClient?: boolean;
+  companyIsSystron?: boolean;
+  canQuickCreateEqui?: boolean;
 }) {
   const router = useRouter();
   const [clientId, setClientId] = useState(props.clients[0]?.id ?? "");
+  const [equiId, setEquiId] = useState("");
   const [quoteType, setQuoteType] = useState("SERVICIO_CAMPO");
   const [lines, setLines] = useState<Line[]>([{ concept: "", quantity: 1 }]);
   const [prelimModel, setPrelimModel] = useState("");
   const [prelimBrand, setPrelimBrand] = useState("");
   const [prelimType, setPrelimType] = useState("");
+  const [prelimSerial, setPrelimSerial] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -65,9 +70,11 @@ export function NewQuoteForm(props: {
       body: JSON.stringify({
         clientId,
         quoteType,
-        prelimEquipmentType: prelimType || undefined,
-        prelimBrand: prelimBrand || undefined,
-        prelimModel: prelimModel || undefined,
+        equiId: equiId || undefined,
+        prelimEquipmentType: equiId ? undefined : prelimType || undefined,
+        prelimBrand: equiId ? undefined : prelimBrand || undefined,
+        prelimModel: equiId ? undefined : prelimModel || undefined,
+        prelimSerial: equiId ? undefined : prelimSerial || undefined,
         lines: validLines,
       }),
     });
@@ -103,26 +110,22 @@ export function NewQuoteForm(props: {
           <option value="VENTA_EQUIPO">Venta de equipo</option>
         </select>
       </label>
-      <div className="grid gap-2 sm:grid-cols-3">
-        <input
-          placeholder="Tipo equipo (preliminar, opcional)"
-          className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-          value={prelimType}
-          onChange={(e) => setPrelimType(e.target.value)}
-        />
-        <input
-          placeholder="Marca"
-          className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-          value={prelimBrand}
-          onChange={(e) => setPrelimBrand(e.target.value)}
-        />
-        <input
-          placeholder="Modelo"
-          className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-          value={prelimModel}
-          onChange={(e) => setPrelimModel(e.target.value)}
-        />
-      </div>
+      <QuoteEquipmentSection
+        clientId={clientId}
+        companyIsSystron={props.companyIsSystron ?? false}
+        canQuickCreateEqui={props.canQuickCreateEqui ?? false}
+        quoteType={quoteType}
+        equiId={equiId}
+        onEquiIdChange={setEquiId}
+        prelimType={prelimType}
+        prelimBrand={prelimBrand}
+        prelimModel={prelimModel}
+        prelimSerial={prelimSerial}
+        onPrelimTypeChange={setPrelimType}
+        onPrelimBrandChange={setPrelimBrand}
+        onPrelimModelChange={setPrelimModel}
+        onPrelimSerialChange={setPrelimSerial}
+      />
       <p className="text-xs text-slate-500">
         Solo contexto comercial — <strong>no captures precio</strong>; queda en pendiente de cotizar
         para CEO/Administrador. Si dejas el concepto vacío, se arma desde tipo + equipo preliminar.

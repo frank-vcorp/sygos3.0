@@ -4,6 +4,7 @@ import { listClients } from "@/server/masters/clients";
 import { getAuthContext } from "@/server/auth/session";
 import { canCreateQuoteAsVendor } from "@/server/rbac/commercial";
 import { canCreateClient } from "@/server/rbac/masters";
+import { canCreateEqui } from "@/server/rbac/assets";
 import type { CompanySlug } from "@/lib/company";
 
 export const dynamic = "force-dynamic";
@@ -26,6 +27,8 @@ export default async function NuevaCotizacionPage() {
       <NewQuoteForm
         clients={clients.map((c) => ({ id: c.id, legalName: c.legalName }))}
         canQuickCreateClient={canCreateClient(auth.effective.role, slug)}
+        companyIsSystron={slug === "SYSTRON"}
+        canQuickCreateEqui={canCreateEqui(auth.effective.role, slug)}
       />
     </div>
   );
