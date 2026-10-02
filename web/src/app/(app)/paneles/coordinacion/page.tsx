@@ -1,6 +1,13 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { formatDirectPurchaseFolio, formatFiscalFolio, formatPurchaseOrderFolio } from "@/server/masters/folios";
+import { PanelRow, PanelSection } from "@/components/panels/panel-ui";
+import {
+  formatDirectPurchaseFolio,
+  formatFiscalFolio,
+  formatPaymentFolio,
+  formatPurchaseOrderFolio,
+  formatPayrollFolio,
+} from "@/server/masters/folios";
+import { formatMxn } from "@/server/commercial/money";
 import { buildCoordinationPanel } from "@/server/panels/aggregates";
 import { getAuthContext } from "@/server/auth/session";
 import { canSeeCoordinationPanel } from "@/server/rbac/panels";
@@ -17,42 +24,93 @@ export default async function PanelCoordPage() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold">Panel Coordinación</h1>
-      <section className="rounded-xl border bg-white p-4 text-sm">
-        <h2 className="font-semibold">Compras directas por validar</h2>
-        <ul className="mt-2 divide-y">
-          {panel.directPurchases.map(({ purchase: p }) => (
-            <li key={p.id} className="py-2">
-              <Link href={`/operacion/compras/directas/${p.id}`} className="text-sygos-teal">
-                {formatDirectPurchaseFolio(p.folioNumber)} · {p.concept}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </section>
-      <section className="rounded-xl border bg-white p-4 text-sm">
-        <h2 className="font-semibold">Facturación pendiente</h2>
-        <ul className="mt-2 divide-y">
-          {panel.fiscalDocuments.map((d) => (
-            <li key={d.id} className="py-2">
-              <Link href={`/administracion/facturacion/${d.id}`} className="text-sygos-teal">
-                {formatFiscalFolio(d.docKind, d.folioNumber)} · {d.clientName}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </section>
-      <section className="rounded-xl border bg-white p-4 text-sm">
-        <h2 className="font-semibold">O.C. autorizadas por procesar</h2>
-        <ul className="mt-2 divide-y">
-          {panel.purchaseOrdersToProcess.map(({ order: o }) => (
-            <li key={o.id} className="py-2">
-              <Link href={`/operacion/oc/${o.id}`} className="text-sygos-teal">
-                {formatPurchaseOrderFolio(o.folioNumber)} · {o.concept}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </section>
+
+      <PanelSection title="Pagos por validar">
+        {panel.paymentsToValidate.map((p) => (
+          <PanelRow
+            key={p.id}
+            href="/administracion/pagos"
+            label={`${formatPaymentFolio(p.folioNumber)} · ${formatMxn(p.amountMxn)} · ${p.clientName ?? "—"}`}
+          />
+        ))}
+      </PanelSection>
+
+      <PanelSection title="Remisiones / facturación pendiente">
+        {panel.remisiones.map((d) => (
+          <PanelRow
+            key={d.id}
+            href={`/administracion/facturacion/${d.id}`}
+            label={`${formatFiscalFolio(d.docKind, d.folioNumber)} · ${d.clientName}`}
+          />
+        ))}
+        {panel.facturasPendientes.map((d) => (
+          <PanelRow
+            key={d.id}
+            href={`/administracion/facturacion/${d.id}`}
+            label={`${formatFiscalFolio(d.docKind, d.folioNumber)} · ${d.clientName}`}
+          />
+        ))}
+      </PanelSection>
+
+      <PanelSection title="CxC vencidas">
+        {panel.cxcOverdue.map((r) => (
+          <PanelRow
+            key={r.arId}
+            href={`/administracion/cobranza/${r.arId}`}
+            label={`${r.clientName} · ${formatMxn(r.balanceMxn)}`}
+          />
+        ))}
+      </PanelSection>
+
+      <PanelSection title="CxP vencidas">
+        {panel.cxpOverdue.map((p) => (
+          <PanelRow
+            key={p.id}
+            href="/administracion/cxp"
+            label={`${p.supplierName} · ${formatMxn(p.balanceMxn)}`}
+          />
+        ))}
+      </PanelSection>
+
+      <PanelSection title="Comprobación SM pendiente">
+        {panel.pendingVerification.map((p) => (
+          <PanelRow
+            key={p.id}
+            href="/administracion/cxp"
+            label={`${p.supplierName ?? "Proveedor"} · ${formatMxn(p.balanceMxn)} · verificar`}
+          />
+        ))}
+      </PanelSection>
+
+      <PanelSection title="Nómina semanal (borrador)">
+        {panel.payrollDraft.map((r) => (
+          <PanelRow
+            key={r.id}
+            href="/capital-humano/nomina"
+            label={`${formatPayrollFolio(r.folioNumber)} · ${r.weekKey}`}
+          />
+        ))}
+      </PanelSection>
+
+      <PanelSection title="Compras directas por validar">
+        {panel.directPurchases.map(({ purchase: p }) => (
+          <PanelRow
+            key={p.id}
+            href={`/operacion/compras/directas/${p.id}`}
+            label={`${formatDirectPurchaseFolio(p.folioNumber)} · ${p.concept}`}
+          />
+        ))}
+      </PanelSection>
+
+      <PanelSection title="O.C. autorizadas por procesar">
+        {panel.purchaseOrdersToProcess.map(({ order: o }) => (
+          <PanelRow
+            key={o.id}
+            href={`/operacion/oc/${o.id}`}
+            label={`${formatPurchaseOrderFolio(o.folioNumber)} · ${o.concept}`}
+          />
+        ))}
+      </PanelSection>
     </div>
   );
 }

@@ -1,6 +1,7 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { formatPurchaseOrderFolio } from "@/server/masters/folios";
+import { PanelRow, PanelSection, SummaryGrid } from "@/components/panels/panel-ui";
+import { formatPurchaseOrderFolio, formatPayrollFolio } from "@/server/masters/folios";
+import { formatMxn } from "@/server/commercial/money";
 import { buildCeoPanel } from "@/server/panels/aggregates";
 import { getAuthContext } from "@/server/auth/session";
 import { canSeeCeoPanel } from "@/server/rbac/panels";
@@ -17,45 +18,112 @@ export default async function PanelCeoPage() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold">Panel CEO</h1>
-      <PanelSection title="O.C. pendientes de autorización">
+
+      <SummaryGrid
+        items={[
+          {
+            label: "Facturado (mes)",
+            value: formatMxn(panel.commercialSummary.facturadoMesMxn),
+            href: "/administracion/finanzas",
+          },
+          {
+            label: "CxC abierta",
+            value: formatMxn(panel.commercialSummary.cxcMxn),
+            href: "/administracion/cobranza",
+          },
+          {
+            label: "SLA vencidos",
+            value: String(panel.productionSummary.slaOverdue),
+            href: "/administracion/produccion-tecnica",
+          },
+          {
+            label: "Comisiones devengadas",
+            value: formatMxn(panel.commissionPendingMxn),
+            href: "/capital-humano/comisiones",
+          },
+        ]}
+      />
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <section className="rounded-xl border bg-white p-4 text-sm">
+          <h2 className="font-semibold">Resumen comercial</h2>
+          <ul className="mt-2 space-y-1 text-slate-600">
+            <li>Cotizaciones por precio: {panel.commercialSummary.quotesToPrice}</li>
+            <li>Cobrado mes: {formatMxn(panel.commercialSummary.cobradoMesMxn)}</li>
+            <li>
+              Conversión mes:{" "}
+              {panel.productionSummary.conversionPct != null
+                ? `${panel.productionSummary.conversionPct}%`
+                : "—"}
+            </li>
+          </ul>
+        </section>
+        <section className="rounded-xl border bg-white p-4 text-sm">
+          <h2 className="font-semibold">Resumen financiero</h2>
+          <ul className="mt-2 space-y-1 text-slate-600">
+            <li>Egresos mes: {formatMxn(panel.financeSummary.egresosMxn)}</li>
+            <li>Flujo neto mes: {formatMxn(panel.financeSummary.flujoNetoMxn)}</li>
+            <li>CxP abierta: {formatMxn(panel.financeSummary.cxpMxn)}</li>
+            <li>Reparaciones cerradas mes: {panel.productionSummary.repairsClosedMonth}</li>
+          </ul>
+        </section>
+      </div>
+
+      <PanelSection title="Decisiones · O.C. pendientes de autorización">
         {panel.purchaseOrders.map((o) => (
-          <Row key={o.id} href={`/operacion/oc/${o.id}`} label={`${formatPurchaseOrderFolio(o.folioNumber)} · ${o.concept}`} />
+          <PanelRow
+            key={o.id}
+            href={`/operacion/oc/${o.id}`}
+            label={`${formatPurchaseOrderFolio(o.folioNumber)} · ${o.concept}`}
+          />
+        ))}
+      </PanelSection>
+      <PanelSection title="Decisiones · Nómina en borrador">
+        {panel.payrollDraft.map((r) => (
+          <PanelRow
+            key={r.id}
+            href="/capital-humano/nomina"
+            label={`${formatPayrollFolio(r.folioNumber)} · ${r.weekKey} · ${r.status}`}
+          />
+        ))}
+      </PanelSection>
+      <PanelSection title="Cancelaciones fiscales solicitadas">
+        {panel.fiscalCancellations.map((d) => (
+          <PanelRow key={d.href} href={d.href} label={d.label} />
+        ))}
+      </PanelSection>
+      <PanelSection title="Notas de crédito por aprobar">
+        {panel.creditNotesPending.map((d) => (
+          <PanelRow key={d.href} href={d.href} label={d.label} />
         ))}
       </PanelSection>
       <PanelSection title="Pendientes de cotizar">
         {panel.quotesPendingPricing.map((q) => (
-          <Row key={q.id} href={`/comercial/cotizaciones/${q.id}`} label={`${q.folio} · ${q.clientName ?? ""}`} />
+          <PanelRow
+            key={q.id}
+            href={`/comercial/cotizaciones/${q.id}`}
+            label={`${q.folio} · ${q.clientName ?? ""}`}
+          />
         ))}
       </PanelSection>
       <PanelSection title="Vacaciones por autorizar">
         {panel.vacations.map((v) => (
-          <Row key={v.id} href="/capital-humano/vacaciones" label={`${v.weekdayDays} d · ${v.status}`} />
+          <PanelRow
+            key={v.id}
+            href="/capital-humano/vacaciones"
+            label={`${v.weekdayDays} d · ${v.status}`}
+          />
         ))}
       </PanelSection>
       <PanelSection title="Horas extra pendientes CEO">
         {panel.overtime.map((o) => (
-          <Row key={o.id} href="/capital-humano/mis-horas-extra" label={`${o.hours}h · ${o.rateKind}`} />
+          <PanelRow
+            key={o.id}
+            href="/capital-humano/mis-horas-extra"
+            label={`${o.hours}h · ${o.rateKind}`}
+          />
         ))}
       </PanelSection>
     </div>
-  );
-}
-
-function PanelSection(props: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="rounded-xl border bg-white p-4 shadow-sm">
-      <h2 className="text-sm font-semibold">{props.title}</h2>
-      <ul className="mt-2 divide-y text-sm">{props.children}</ul>
-    </section>
-  );
-}
-
-function Row(props: { href: string; label: string }) {
-  return (
-    <li className="py-2">
-      <Link href={props.href} className="text-sygos-teal">
-        {props.label}
-      </Link>
-    </li>
   );
 }

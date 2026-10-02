@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, or } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, lt, or } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import {
   clients,
@@ -119,11 +119,25 @@ function systronVisibility(systronId: string, smId: string) {
   )!;
 }
 
+const ACTIVE_DIAGNOSTIC_STATUSES: (typeof diagnostics.$inferSelect)["status"][] =
+  [
+    "EN_ESPERA",
+    "EN_DIAGNOSTICO",
+    "DIAGNOSTICO_TERMINADO",
+    "PENDIENTE_VALIDACION_GERENTE",
+    "DEVUELTO_CORRECCION",
+  ];
+
 export async function listDiagnostics(params: {
   activeSlug: CompanySlug;
   companyId: string;
   status?: string;
   validationQueue?: boolean;
+  assignedUserId?: string;
+  unassignedOnly?: boolean;
+  activeOnly?: boolean;
+  overdueOnly?: boolean;
+  limit?: number;
 }) {
   const db = getDb();
   const ids = await resolveCompanyIds();
@@ -144,6 +158,19 @@ export async function listDiagnostics(params: {
     conditions.push(
       eq(diagnostics.status, "PENDIENTE_VALIDACION_GERENTE"),
     );
+  }
+  if (params.assignedUserId) {
+    conditions.push(eq(diagnostics.assignedUserId, params.assignedUserId));
+  }
+  if (params.unassignedOnly) {
+    conditions.push(isNull(diagnostics.assignedUserId));
+  }
+  if (params.activeOnly) {
+    conditions.push(inArray(diagnostics.status, ACTIVE_DIAGNOSTIC_STATUSES));
+  }
+  if (params.overdueOnly) {
+    conditions.push(lt(diagnostics.slaDueAt, new Date()));
+    conditions.push(inArray(diagnostics.status, ACTIVE_DIAGNOSTIC_STATUSES));
   }
 
   const rows = await db
@@ -166,7 +193,8 @@ export async function listDiagnostics(params: {
     .leftJoin(motors, eq(motors.id, serviceAttentions.motorId))
     .leftJoin(users, eq(users.id, diagnostics.assignedUserId))
     .where(and(...conditions))
-    .orderBy(desc(diagnostics.createdAt));
+    .orderBy(desc(diagnostics.createdAt))
+    .limit(params.limit ?? 500);
 
   return rows.map((r) => ({
     ...r,

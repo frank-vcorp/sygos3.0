@@ -40,6 +40,13 @@ export function canSeeNavSection(
     }
     if (role === "COORDINACION_ADMINISTRACION") return true;
     if (role === "GERENTE_OPERATIVO_SERVOMOTORES") return true;
+    if (
+      role === "GERENTE_OPERATIVO_SYSTRON" ||
+      role === "SUPERVISOR_TECNICO_SYSTRON" ||
+      role === "TECNICO_SYSTRON"
+    ) {
+      return true;
+    }
     return false;
   }
   if (isSuperAdmin(role) || role === "CEO" || role === "COORDINACION_ADMINISTRACION") {

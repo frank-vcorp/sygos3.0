@@ -1,12 +1,59 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import {
   equiUnits,
   motors,
   sparePartRequests,
+  users,
   workOrders,
 } from "@/db/schema";
 import { formatOsFolio, nextFolioValue } from "@/server/masters/folios";
+
+const ACTIVE_REPAIR_STATUSES: (typeof workOrders.$inferSelect)["repairStatus"][] =
+  ["EN_ESPERA", "EN_REPARACION", "EN_ESPERA_REFACCIONES"];
+
+export async function listWorkOrdersForPanel(params: {
+  companyId: string;
+  assignedUserId?: string;
+  unassignedOnly?: boolean;
+  repairStatus?: (typeof workOrders.$inferSelect)["repairStatus"][];
+  activeOnly?: boolean;
+  limit?: number;
+}) {
+  const db = getDb();
+  const conditions = [eq(workOrders.companyId, params.companyId)];
+  if (params.assignedUserId) {
+    conditions.push(eq(workOrders.assignedUserId, params.assignedUserId));
+  }
+  if (params.unassignedOnly) {
+    conditions.push(isNull(workOrders.assignedUserId));
+  }
+  if (params.repairStatus?.length) {
+    conditions.push(inArray(workOrders.repairStatus, params.repairStatus));
+  }
+  if (params.activeOnly) {
+    conditions.push(inArray(workOrders.repairStatus, ACTIVE_REPAIR_STATUSES));
+  }
+
+  const rows = await db
+    .select({
+      id: workOrders.id,
+      folioNumber: workOrders.folioNumber,
+      repairStatus: workOrders.repairStatus,
+      summary: workOrders.summary,
+      assignedName: users.displayName,
+    })
+    .from(workOrders)
+    .leftJoin(users, eq(users.id, workOrders.assignedUserId))
+    .where(and(...conditions))
+    .orderBy(desc(workOrders.updatedAt))
+    .limit(params.limit ?? 80);
+
+  return rows.map((r) => ({
+    ...r,
+    folio: formatOsFolio(r.folioNumber),
+  }));
+}
 
 export async function listWorkOrders(companyId: string) {
   const db = getDb();

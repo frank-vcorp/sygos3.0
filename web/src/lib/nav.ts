@@ -59,6 +59,8 @@ export const appNavSections: NavSection[] = [
       { label: "Panel CEO", href: "/paneles/ceo" },
       { label: "Panel Coordinación", href: "/paneles/coordinacion" },
       { label: "Panel Gerente SM", href: "/paneles/gerente-sm" },
+      { label: "Panel técnico", href: "/paneles/tecnico" },
+      { label: "Panel operación SYSTRON", href: "/paneles/operacion-systron" },
     ],
   },
   {
@@ -70,6 +72,7 @@ export const appNavSections: NavSection[] = [
       { label: "CxP", href: "/administracion/cxp" },
       { label: "Finanzas", href: "/administracion/finanzas" },
       { label: "Reportes", href: "/reportes" },
+      { label: "Producción técnica (analítica)", href: "/administracion/produccion-tecnica" },
     ],
   },
 ];
