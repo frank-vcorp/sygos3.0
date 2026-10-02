@@ -50,7 +50,6 @@ export function AppSidebar({
     <aside className="flex w-60 shrink-0 flex-col bg-sygos-navy-sidebar text-slate-200">
       <div className="border-b border-white/10 px-4 py-5">
         <SygosLogo variant="light" className="origin-left scale-90" />
-        <p className="mt-1 text-[10px] text-slate-400">Monitoreo inteligente</p>
       </div>
 
       <nav className="flex-1 overflow-y-auto px-2 py-4">

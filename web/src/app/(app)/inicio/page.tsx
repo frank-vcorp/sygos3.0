@@ -8,7 +8,7 @@ export default function InicioPage() {
         src="/brand/sygos-logo.png"
         alt=""
         width={320}
-        height={120}
+        height={Math.round((320 * 793) / 1983)}
         className="pointer-events-none absolute bottom-4 right-4 opacity-[0.06]"
         aria-hidden
       />
