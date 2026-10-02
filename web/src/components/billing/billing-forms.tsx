@@ -87,10 +87,23 @@ export function FiscalDocActions(props: {
   );
 }
 
-export function QuoteBillingRequest(props: { quoteId: string }) {
+export function QuoteBillingRequest(props: {
+  quoteId: string;
+  pendingInvoiceMxn?: number | null;
+}) {
   const router = useRouter();
 
   async function request(docKind: "FACTURA" | "REMISION") {
+    let amountMxn: number | undefined;
+    if (docKind === "FACTURA" && props.pendingInvoiceMxn != null) {
+      const raw = window.prompt(
+        `Importe a facturar (MXN, máx. ${props.pendingInvoiceMxn}):`,
+        String(props.pendingInvoiceMxn),
+      );
+      if (raw == null) return;
+      amountMxn = Number.parseInt(raw, 10);
+      if (!Number.isFinite(amountMxn) || amountMxn <= 0) return;
+    }
     await fetch("/api/billing/documents", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -98,6 +111,7 @@ export function QuoteBillingRequest(props: { quoteId: string }) {
         kind: "quote_request",
         quoteId: props.quoteId,
         docKind,
+        amountMxn,
       }),
     });
     router.refresh();

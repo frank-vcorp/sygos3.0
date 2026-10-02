@@ -5,6 +5,7 @@ import { QuoteActions } from "@/components/commercial/commercial-forms";
 import { canRequestFiscalDocument } from "@/server/rbac/billing";
 import type { CompanySlug } from "@/lib/company";
 import { formatMxn } from "@/server/commercial/money";
+import { getQuotePendingInvoiceMxn } from "@/server/billing/fiscal-documents";
 import { getQuoteDetail } from "@/server/commercial/quotes";
 import { getAuthContext } from "@/server/auth/session";
 import {
@@ -27,6 +28,10 @@ export default async function CotizacionDetallePage({ params }: Props) {
   if (!detail) redirect("/comercial/cotizaciones");
 
   const q = detail.quote;
+  const pendingInvoiceMxn =
+    ["AUTORIZADA", "AUTORIZADA_PENDIENTE_INGRESO"].includes(q.status) ?
+      await getQuotePendingInvoiceMxn(id)
+    : 0;
   const showBase =
     canSeeIntercompanyBase(auth.effective.role) &&
     detail.quote.intercompanyBaseTotalMxn != null;
@@ -120,7 +125,10 @@ export default async function CotizacionDetallePage({ params }: Props) {
           <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
             <h2 className="text-sm font-medium">Facturación / remisión</h2>
             <div className="mt-2">
-              <QuoteBillingRequest quoteId={id} />
+              <QuoteBillingRequest
+                quoteId={id}
+                pendingInvoiceMxn={pendingInvoiceMxn}
+              />
             </div>
           </section>
         )}

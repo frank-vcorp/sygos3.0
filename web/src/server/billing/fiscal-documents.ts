@@ -27,6 +27,17 @@ import {
   nextFolioValue,
 } from "@/server/masters/folios";
 
+export async function getQuotePendingInvoiceMxn(quoteId: string) {
+  const db = getDb();
+  const [quote] = await db
+    .select({ totalMxn: quotes.totalMxn })
+    .from(quotes)
+    .where(eq(quotes.id, quoteId))
+    .limit(1);
+  const invoiced = await sumInvoicedForQuote(quoteId);
+  return Math.max(0, (quote?.totalMxn ?? 0) - invoiced);
+}
+
 async function sumInvoicedForQuote(quoteId: string) {
   const db = getDb();
   const rows = await db
