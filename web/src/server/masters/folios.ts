@@ -32,6 +32,18 @@ export function formatPaymentFolio(n: number): string {
   return `PAG-${n}`;
 }
 
+export function formatDirectPurchaseFolio(n: number): string {
+  return `CD-${n}`;
+}
+
+export function formatPurchaseOrderFolio(n: number): string {
+  return `OC-${n}`;
+}
+
+export function formatMovementFolio(n: number): string {
+  return `MOV-${n}`;
+}
+
 /** Secuencia MOT global compartida SYSTRON ↔ Servomotores. */
 export async function nextGlobalMotFolio(): Promise<number> {
   const db = getDb();

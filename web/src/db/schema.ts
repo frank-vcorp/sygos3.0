@@ -78,6 +78,10 @@ export const users = pgTable(
     homeCompanyId: uuid("home_company_id").references(() => companies.id),
     mustChangePassword: boolean("must_change_password").default(false).notNull(),
     vendorDiscountLimitPct: integer("vendor_discount_limit_pct"),
+    directPurchaseMonthlyLimitMxn: integer("direct_purchase_monthly_limit_mxn"),
+    directPurchaseIndividualLimitMxn: integer(
+      "direct_purchase_individual_limit_mxn",
+    ),
     isActive: boolean("is_active").default(true).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
@@ -1251,6 +1255,12 @@ export const accountsPayable = pgTable("accounts_payable", {
   dueDate: timestamp("due_date", { withTimezone: true }),
   status: apStatusEnum("status").default("ABIERTA").notNull(),
   linkedArEntryId: uuid("linked_ar_entry_id"),
+  directPurchaseId: uuid("direct_purchase_id"),
+  purchaseOrderId: uuid("purchase_order_id"),
+  description: text("description"),
+  pendingVerification: boolean("pending_verification")
+    .default(false)
+    .notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
@@ -1309,6 +1319,197 @@ export const paymentAllocations = pgTable("payment_allocations", {
   apEntryId: uuid("ap_entry_id").references(() => accountsPayable.id),
   amountMxn: integer("amount_mxn").notNull(),
 });
+
+export const purchaseDestinationKindEnum = pgEnum("purchase_destination_kind", [
+  "WORK_ORDER",
+  "MOTOR",
+  "INVENTORY",
+  "OPERATIONAL",
+]);
+
+export const purchasePaymentTermsEnum = pgEnum("purchase_payment_terms", [
+  "CONTADO",
+  "CREDITO",
+]);
+
+export const directPurchaseStatusEnum = pgEnum("direct_purchase_status", [
+  "REGISTRADA",
+  "PENDIENTE_VALIDAR",
+  "PROCESADA",
+]);
+
+export const purchaseOrderStatusEnum = pgEnum("purchase_order_status", [
+  "PENDIENTE_AUTORIZACION",
+  "AUTORIZADA",
+  "RECHAZADA",
+  "PENDIENTE_PROCESAR",
+  "PROCESADA",
+  "CANCELADA",
+]);
+
+export const financialAccountKindEnum = pgEnum("financial_account_kind", [
+  "BANCO",
+  "EFECTIVO",
+  "TARJETA",
+]);
+
+export const financialMovementKindEnum = pgEnum("financial_movement_kind", [
+  "INGRESO",
+  "EGRESO",
+  "TRANSFERENCIA",
+]);
+
+export const directPurchases = pgTable(
+  "direct_purchases",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    companyId: uuid("company_id")
+      .notNull()
+      .references(() => companies.id, { onDelete: "cascade" }),
+    folioNumber: integer("folio_number").notNull(),
+    status: directPurchaseStatusEnum("status").default("REGISTRADA").notNull(),
+    supplierId: uuid("supplier_id").references(() => suppliers.id),
+    concept: text("concept").notNull(),
+    amountMxn: integer("amount_mxn").notNull(),
+    paymentTerms: purchasePaymentTermsEnum("payment_terms").notNull(),
+    destinationKind: purchaseDestinationKindEnum("destination_kind").notNull(),
+    workOrderId: uuid("work_order_id").references(() => workOrders.id),
+    motorId: uuid("motor_id").references(() => motors.id),
+    shippingReference: text("shipping_reference"),
+    budgetMonthKey: text("budget_month_key").notNull(),
+    registeredByUserId: uuid("registered_by_user_id")
+      .notNull()
+      .references(() => users.id),
+    accountsPayableId: uuid("accounts_payable_id"),
+    financialMovementId: uuid("financial_movement_id"),
+    processedByUserId: uuid("processed_by_user_id").references(() => users.id),
+    processedAt: timestamp("processed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("direct_purchases_company_folio_unique").on(
+      t.companyId,
+      t.folioNumber,
+    ),
+  ],
+);
+
+export const purchaseOrders = pgTable(
+  "purchase_orders",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    companyId: uuid("company_id")
+      .notNull()
+      .references(() => companies.id, { onDelete: "cascade" }),
+    folioNumber: integer("folio_number").notNull(),
+    status: purchaseOrderStatusEnum("status")
+      .default("PENDIENTE_AUTORIZACION")
+      .notNull(),
+    supplierId: uuid("supplier_id").references(() => suppliers.id),
+    concept: text("concept").notNull(),
+    authorizedAmountMxn: integer("authorized_amount_mxn").notNull(),
+    paymentTerms: purchasePaymentTermsEnum("payment_terms").notNull(),
+    destinationKind: purchaseDestinationKindEnum("destination_kind").notNull(),
+    workOrderId: uuid("work_order_id").references(() => workOrders.id),
+    motorId: uuid("motor_id").references(() => motors.id),
+    shippingReference: text("shipping_reference"),
+    requestedByUserId: uuid("requested_by_user_id")
+      .notNull()
+      .references(() => users.id),
+    authorizedByUserId: uuid("authorized_by_user_id").references(() => users.id),
+    authorizedAt: timestamp("authorized_at", { withTimezone: true }),
+    rejectionReason: text("rejection_reason"),
+    cancellationReason: text("cancellation_reason"),
+    accountsPayableId: uuid("accounts_payable_id"),
+    financialMovementId: uuid("financial_movement_id"),
+    processedByUserId: uuid("processed_by_user_id").references(() => users.id),
+    processedAt: timestamp("processed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("purchase_orders_company_folio_unique").on(
+      t.companyId,
+      t.folioNumber,
+    ),
+  ],
+);
+
+export const financialAccounts = pgTable("financial_accounts", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  companyId: uuid("company_id")
+    .notNull()
+    .references(() => companies.id, { onDelete: "cascade" }),
+  kind: financialAccountKindEnum("kind").notNull(),
+  name: text("name").notNull(),
+  balanceMxn: integer("balance_mxn").default(0).notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const financialMovements = pgTable(
+  "financial_movements",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    companyId: uuid("company_id")
+      .notNull()
+      .references(() => companies.id, { onDelete: "cascade" }),
+    folioNumber: integer("folio_number").notNull(),
+    kind: financialMovementKindEnum("kind").notNull(),
+    accountId: uuid("account_id")
+      .notNull()
+      .references(() => financialAccounts.id),
+    counterAccountId: uuid("counter_account_id").references(
+      () => financialAccounts.id,
+    ),
+    amountMxn: integer("amount_mxn").notNull(),
+    category: text("category"),
+    description: text("description").notNull(),
+    paymentId: uuid("payment_id").references(() => payments.id),
+    directPurchaseId: uuid("direct_purchase_id").references(
+      () => directPurchases.id,
+    ),
+    purchaseOrderId: uuid("purchase_order_id").references(
+      () => purchaseOrders.id,
+    ),
+    accountsPayableId: uuid("accounts_payable_id"),
+    pendingVerification: boolean("pending_verification")
+      .default(false)
+      .notNull(),
+    regularizedFiscalDocumentId: uuid(
+      "regularized_fiscal_document_id",
+    ).references(() => fiscalDocuments.id),
+    occurredAt: timestamp("occurred_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    createdByUserId: uuid("created_by_user_id")
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("financial_movements_company_folio_unique").on(
+      t.companyId,
+      t.folioNumber,
+    ),
+  ],
+);
 
 export const collectionLogs = pgTable("collection_logs", {
   id: uuid("id").defaultRandom().primaryKey(),

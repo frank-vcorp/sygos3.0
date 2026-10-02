@@ -1,38 +1,70 @@
-import Image from "next/image";
-import { RefreshCw } from "lucide-react";
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { formatPurchaseOrderFolio } from "@/server/masters/folios";
+import { listDirectPurchases } from "@/server/purchases/direct";
+import { listCeoPendingPurchaseOrders } from "@/server/purchases/orders";
+import { getAuthContext } from "@/server/auth/session";
+import { canAuthorizePurchaseOrder, canProcessPurchases } from "@/server/rbac/purchases";
+import { isSuperAdmin } from "@/server/rbac/roles";
 
-export default function InicioPage() {
+export const dynamic = "force-dynamic";
+
+export default async function InicioPage() {
+  const auth = await getAuthContext();
+  if (!auth) redirect("/login");
+
+  const showCeo =
+    canAuthorizePurchaseOrder(auth.effective.role) || isSuperAdmin(auth.effective.role);
+  const showCoord = canProcessPurchases(auth.effective.role);
+
+  const [ceoOrders, directRows] = await Promise.all([
+    showCeo ? listCeoPendingPurchaseOrders(auth.activeCompany.id) : [],
+    showCoord ? listDirectPurchases(auth.activeCompany.id) : [],
+  ]);
+
+  const pendingDirect = directRows.filter(
+    (r) => r.purchase.status === "PENDIENTE_VALIDAR",
+  );
+
+  const hasBlocks = ceoOrders.length > 0 || pendingDirect.length > 0;
+
   return (
-    <div className="relative flex min-h-[420px] items-center justify-center">
-      <Image
-        src="/brand/sygos-logo.png"
-        alt=""
-        width={320}
-        height={Math.round((320 * 793) / 1983)}
-        className="pointer-events-none absolute bottom-4 right-4 opacity-[0.06]"
-        aria-hidden
-      />
-      <div className="max-w-md rounded-xl border border-slate-200 bg-white p-8 text-center shadow-sm">
-        <p className="text-sm font-medium text-red-600/90">⚠</p>
-        <h1 className="mt-2 text-lg font-semibold text-slate-900">
-          No pudimos cargar esta vista
-        </h1>
-        <p className="mt-2 text-sm text-slate-500">
-          La operación no se completó. Puedes reintentar sin perder el contexto
-          actual.
+    <div className="mx-auto max-w-2xl space-y-6">
+      <h1 className="text-2xl font-semibold">Inicio</h1>
+      {!hasBlocks && (
+        <p className="text-sm text-slate-500">
+          Sin pendientes ejecutivos en esta empresa. Usa el menú lateral para operar.
         </p>
-        <button
-          type="button"
-          className="mt-6 inline-flex items-center gap-2 rounded-lg bg-sygos-navy px-4 py-2.5 text-sm font-medium text-white hover:bg-sygos-navy-sidebar"
-        >
-          <RefreshCw className="h-4 w-4" />
-          Reintentar
-        </button>
-        <p className="mt-6 text-xs text-slate-400">
-          Scaffolding Fase 1: el panel por rol se conectará cuando existan datos
-          y API.
-        </p>
-      </div>
+      )}
+      {ceoOrders.length > 0 && (
+        <section className="rounded-xl border bg-white p-4 shadow-sm">
+          <h2 className="text-sm font-semibold">O.C. pendientes de autorización (CEO)</h2>
+          <ul className="mt-3 divide-y text-sm">
+            {ceoOrders.map((o) => (
+              <li key={o.id} className="flex justify-between py-2">
+                <Link href={`/operacion/oc/${o.id}`} className="text-sygos-teal">
+                  {formatPurchaseOrderFolio(o.folioNumber)} · {o.concept}
+                </Link>
+                <span>{o.authorizedAmountMxn} MXN</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+      {pendingDirect.length > 0 && (
+        <section className="rounded-xl border bg-white p-4 shadow-sm">
+          <h2 className="text-sm font-semibold">Compras directas por validar</h2>
+          <ul className="mt-3 divide-y text-sm">
+            {pendingDirect.map(({ purchase: p }) => (
+              <li key={p.id} className="py-2">
+                <Link href={`/operacion/compras/directas/${p.id}`} className="text-sygos-teal">
+                  CD-{p.folioNumber} · {p.concept}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
   );
 }

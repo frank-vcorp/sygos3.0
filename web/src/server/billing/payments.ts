@@ -204,6 +204,32 @@ export async function validatePayment(params: {
     .where(eq(payments.id, payment.id))
     .returning();
 
+  if (updated.clientId && !updated.isIntercompany) {
+    const { ensureDefaultFinancialAccounts } = await import(
+      "@/server/finance/accounts"
+    );
+    const { recordIncome } = await import("@/server/finance/movements");
+    await ensureDefaultFinancialAccounts(params.companyId);
+    const { listFinancialAccounts } = await import("@/server/finance/accounts");
+    const accounts = await listFinancialAccounts(params.companyId);
+    const kind =
+      updated.destination === "EFECTIVO" ? "EFECTIVO"
+      : updated.destination === "TARJETA" ? "TARJETA"
+      : "BANCO";
+    const account = accounts.find((a) => a.kind === kind) ?? accounts[0];
+    if (account) {
+      await recordIncome({
+        companyId: params.companyId,
+        accountId: account.id,
+        amountMxn: updated.amountMxn,
+        description: `Pago ${updated.receiptReference}`,
+        category: "Cobranza",
+        createdByUserId: params.validatorUserId,
+        paymentId: updated.id,
+      });
+    }
+  }
+
   return updated;
 }
 
