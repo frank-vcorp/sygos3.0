@@ -31,7 +31,17 @@ export default async function FiscalDocumentPage({ params }: Props) {
       <h1 className="text-2xl font-semibold">{detail.doc.folio}</h1>
       <p className="text-sm text-slate-500">
         {detail.client?.legalName} · {detail.doc.status.replace(/_/g, " ")}
+        {detail.doc.fiscalSimulated && detail.doc.status === "EMITIDA" ? (
+          <span className="ml-2 rounded bg-amber-200 px-2 py-0.5 text-xs font-semibold text-amber-950">
+            PRUEBA / SIN VALIDEZ
+          </span>
+        ) : null}
       </p>
+      {detail.doc.fiscalRetryCount > 0 && (
+        <p className="text-xs text-slate-500">
+          Reintentos fiscales: {detail.doc.fiscalRetryCount}
+        </p>
+      )}
       <ul className="rounded-xl border bg-white p-4 text-sm">
         {detail.lines.map((l) => (
           <li key={l.id} className="flex justify-between py-1">

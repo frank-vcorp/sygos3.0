@@ -16,6 +16,13 @@ export const metadata: Metadata = {
   title: "SYGOS 3.0",
   description: "Plataforma operativa SYSTRON y Servomotores",
   manifest: "/manifest.json",
+  appleWebApp: { capable: true, title: "SYGOS" },
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#0f2744",
 };
 
 export default function RootLayout({

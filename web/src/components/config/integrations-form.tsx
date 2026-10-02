@@ -89,6 +89,8 @@ function IntegrationCard({
   const [enabled, setEnabled] = useState(row.enabled);
   const [apiKey, setApiKey] = useState("");
   const [extra, setExtra] = useState("");
+  const [probe, setProbe] = useState<string | null>(null);
+  const [probing, setProbing] = useState(false);
 
   const fields: Record<string, string> =
     row.provider === "sendgrid"
@@ -150,14 +152,42 @@ function IntegrationCard({
           habilitación y número por empresa.
         </p>
       )}
-      <button
-        type="button"
-        disabled={saving}
-        onClick={() => onSave(row.provider, enabled, fields)}
-        className="mt-4 rounded-lg bg-sygos-navy px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
-      >
-        {saving ? "Guardando…" : "Guardar"}
-      </button>
+      <div className="mt-4 flex flex-wrap gap-2">
+        <button
+          type="button"
+          disabled={saving}
+          onClick={() => onSave(row.provider, enabled, fields)}
+          className="rounded-lg bg-sygos-navy px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+        >
+          {saving ? "Guardando…" : "Guardar"}
+        </button>
+        {row.provider === "facturapi" && row.configured && (
+          <button
+            type="button"
+            disabled={probing}
+            onClick={async () => {
+              setProbing(true);
+              setProbe(null);
+              const res = await fetch("/api/config/integrations/test", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ provider: "facturapi" }),
+              });
+              const data = (await res.json()) as { ok: boolean; message: string };
+              setProbe(data.ok ? `✓ ${data.message}` : data.message);
+              setProbing(false);
+            }}
+            className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm disabled:opacity-60"
+          >
+            {probing ? "Probando…" : "Probar conexión"}
+          </button>
+        )}
+      </div>
+      {probe && (
+        <p className={`mt-2 text-xs ${probe.startsWith("✓") ? "text-emerald-700" : "text-red-700"}`}>
+          {probe}
+        </p>
+      )}
     </section>
   );
 }

@@ -2,15 +2,19 @@
   "name": "SYGOS 3.0",
   "short_name": "SYGOS",
   "start_url": "/inicio",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "any",
   "background_color": "#0f2744",
   "theme_color": "#0f2744",
+  "lang": "es-MX",
   "description": "Operación multiempresa SYSTRON y Servomotores",
   "icons": [
     {
       "src": "/brand/sygos-logo.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }

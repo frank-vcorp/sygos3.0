@@ -64,6 +64,13 @@
       "when": 1790907575292,
       "tag": "0008_right_vanisher",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790909342503,
+      "tag": "0009_lethal_pepper_potts",
+      "breakpoints": true
     }
   ]
 }

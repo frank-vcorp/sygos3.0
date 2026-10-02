@@ -207,8 +207,15 @@ export function CompanySettingsForm({
             name="testModeEnabled"
             defaultChecked={settings.testModeEnabled}
           />
-          Simular emisión fiscal (Facturapi no se llama en producción de timbrado)
+          Simular integraciones externas para toda la empresa (timbrado, cancelaciones)
         </label>
+        <p className="mt-2 text-xs text-slate-600">
+          Preferible usar{" "}
+          <a href="/configuracion/modo-pruebas" className="text-sygos-teal underline">
+            Modo de pruebas por participantes
+          </a>{" "}
+          para no afectar al resto del equipo.
+        </p>
       </fieldset>
 
       <button

@@ -7,7 +7,7 @@ type ContextBannersProps = {
 
 export function ContextBanners({
   activeCompany,
-  missingIntegrations = ["Facturapi", "SendGrid", "WhatsApp"],
+  missingIntegrations = [],
 }: ContextBannersProps) {
   return (
     <div className="space-y-0 border-b border-slate-200">

@@ -142,6 +142,48 @@ export const viewAsLogs = pgTable("view_as_logs", {
   endedAt: timestamp("ended_at", { withTimezone: true }),
 });
 
+export const testModeSessions = pgTable("test_mode_sessions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  startedByUserId: uuid("started_by_user_id")
+    .notNull()
+    .references(() => users.id),
+  startedAt: timestamp("started_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  endedAt: timestamp("ended_at", { withTimezone: true }),
+  active: boolean("active").default(true).notNull(),
+});
+
+export const testModeSessionUsers = pgTable(
+  "test_mode_session_users",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    sessionId: uuid("session_id")
+      .notNull()
+      .references(() => testModeSessions.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+  },
+  (t) => [
+    uniqueIndex("test_mode_session_users_unique").on(t.sessionId, t.userId),
+  ],
+);
+
+export const testModeSessionRoles = pgTable(
+  "test_mode_session_roles",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    sessionId: uuid("session_id")
+      .notNull()
+      .references(() => testModeSessions.id, { onDelete: "cascade" }),
+    role: userRoleEnum("role").notNull(),
+  },
+  (t) => [
+    uniqueIndex("test_mode_session_roles_unique").on(t.sessionId, t.role),
+  ],
+);
+
 export const companyIntegrations = pgTable(
   "company_integrations",
   {
@@ -1177,6 +1219,7 @@ export const fiscalDocuments = pgTable(
     idempotencyKey: text("idempotency_key").notNull(),
     lastFiscalError: text("last_fiscal_error"),
     fiscalRetryCount: integer("fiscal_retry_count").default(0).notNull(),
+    fiscalSimulated: boolean("fiscal_simulated").default(false).notNull(),
     linkedMirrorDocumentId: uuid("linked_mirror_document_id"),
     cancellationApprovedByUserId: uuid("cancellation_approved_by_user_id").references(
       () => users.id,

@@ -29,14 +29,8 @@ export async function getMissingIntegrations(
   const missing: string[] = [];
   for (const provider of PROVIDERS) {
     const row = rows.find((r) => r.provider === provider);
-    if (provider === "whatsapp") {
-      if (!row?.enabled) continue;
-      if (!row.configCiphertext) missing.push(LABELS[provider]);
-      continue;
-    }
-    if (!row?.enabled || !row.configCiphertext) {
-      missing.push(LABELS[provider]);
-    }
+    if (!row?.enabled) continue;
+    if (!row.configCiphertext) missing.push(LABELS[provider]);
   }
   return missing;
 }

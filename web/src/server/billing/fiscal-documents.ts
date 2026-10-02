@@ -288,6 +288,7 @@ export async function emitFiscalDocument(params: {
   companyId: string;
   fiscalDocumentId: string;
   actorUserId: string;
+  actorRole: import("@/db/schema").UserRole;
 }) {
   const db = getDb();
   const detail = await getFiscalDocumentDetail(
@@ -326,6 +327,8 @@ export async function emitFiscalDocument(params: {
   try {
     const result = await emitInvoiceWithFacturapi({
       companyId: params.companyId,
+      actorUserId: params.actorUserId,
+      actorRole: params.actorRole,
       idempotencyKey: detail.doc.idempotencyKey,
       customer: {
         legal_name: detail.doc.taxLegalNameSnapshot ?? detail.client!.legalName,
@@ -346,6 +349,7 @@ export async function emitFiscalDocument(params: {
         status: "EMITIDA",
         facturapiInvoiceId: result.invoiceId,
         facturapiUuid: result.uuid,
+        fiscalSimulated: result.simulated,
         lastFiscalError: null,
         issuedByUserId: params.actorUserId,
         issuedAt: new Date(),
@@ -424,6 +428,7 @@ export async function retryFiscalEmit(params: {
   companyId: string;
   fiscalDocumentId: string;
   actorUserId: string;
+  actorRole: import("@/db/schema").UserRole;
 }) {
   const db = getDb();
   const [doc] = await db
@@ -474,6 +479,7 @@ export async function approveAndExecuteCancellation(params: {
   fiscalDocumentId: string;
   approverUserId: string;
   executorUserId: string;
+  executorRole: import("@/db/schema").UserRole;
 }) {
   const db = getDb();
   const [doc] = await db
@@ -493,6 +499,8 @@ export async function approveAndExecuteCancellation(params: {
   if (doc.facturapiInvoiceId && doc.docKind === "FACTURA") {
     await cancelInvoiceWithFacturapi({
       companyId: params.companyId,
+      actorUserId: params.executorUserId,
+      actorRole: params.executorRole,
       facturapiInvoiceId: doc.facturapiInvoiceId,
     });
   }

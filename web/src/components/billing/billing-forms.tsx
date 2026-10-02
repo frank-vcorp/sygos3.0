@@ -18,7 +18,12 @@ export function FiscalDocActions(props: {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action }),
     });
-    if (res.ok && action === "prepare_credit_note") {
+    if (!res.ok) {
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      window.alert(data.error ?? "No se pudo completar la acción.");
+      return;
+    }
+    if (action === "prepare_credit_note") {
       const data = (await res.json()) as { document?: { id?: string } };
       if (data.document?.id) {
         router.push(`/administracion/facturacion/${data.document.id}`);

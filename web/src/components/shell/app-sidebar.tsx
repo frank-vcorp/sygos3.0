@@ -131,6 +131,26 @@ export function AppSidebar({
                   </Link>
                 </li>
               )}
+              {showConfigGeneral && (
+                <>
+                  <li>
+                    <Link
+                      href="/configuracion/modo-pruebas"
+                      className={linkClass("/configuracion/modo-pruebas")}
+                    >
+                      Modo de pruebas
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="/configuracion/cierre-e2e"
+                      className={linkClass("/configuracion/cierre-e2e")}
+                    >
+                      Cierre E2E
+                    </Link>
+                  </li>
+                </>
+              )}
             </ul>
           </div>
         )}

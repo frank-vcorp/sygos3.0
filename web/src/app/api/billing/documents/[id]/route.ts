@@ -15,6 +15,7 @@ import {
   canEmitFiscalDocument,
   canSeeBillingModule,
 } from "@/server/rbac/billing";
+import { IntegrationMissingError } from "@/server/integrations/errors";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -58,11 +59,13 @@ export async function PATCH(request: Request, { params }: Params) {
             companyId: auth.activeCompany.id,
             fiscalDocumentId: id,
             actorUserId: auth.actor.id,
+            actorRole: auth.effective.role,
           })
         : await emitFiscalDocument({
             companyId: auth.activeCompany.id,
             fiscalDocumentId: id,
             actorUserId: auth.actor.id,
+            actorRole: auth.effective.role,
           });
       return NextResponse.json({ document: doc });
     }
@@ -83,6 +86,7 @@ export async function PATCH(request: Request, { params }: Params) {
         fiscalDocumentId: id,
         approverUserId: auth.actor.id,
         executorUserId: auth.actor.id,
+        executorRole: auth.effective.role,
       });
       return NextResponse.json({ document: doc });
     }
@@ -108,6 +112,9 @@ export async function PATCH(request: Request, { params }: Params) {
       return NextResponse.json({ document: doc });
     }
   } catch (e) {
+    if (e instanceof IntegrationMissingError) {
+      return NextResponse.json({ error: e.message, code: e.code }, { status: 422 });
+    }
     const msg = e instanceof Error ? e.message : "";
     if (msg === "MISSING_TAX_DATA") {
       return NextResponse.json({ error: "Faltan datos fiscales del cliente." }, { status: 400 });
@@ -115,7 +122,10 @@ export async function PATCH(request: Request, { params }: Params) {
     if (msg === "INVALID_STATUS") {
       return NextResponse.json({ error: "Estado inválido." }, { status: 400 });
     }
-    return NextResponse.json({ error: "Error al procesar documento." }, { status: 400 });
+    return NextResponse.json(
+      { error: msg || "Error al procesar documento." },
+      { status: 400 },
+    );
   }
   return NextResponse.json({ error: "Solicitud inválida." }, { status: 400 });
 }
