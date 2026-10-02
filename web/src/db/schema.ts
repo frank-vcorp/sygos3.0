@@ -1089,6 +1089,246 @@ export const clientFirstOperations = pgTable("client_first_operations", {
     .notNull(),
 });
 
+export const fiscalDocKindEnum = pgEnum("fiscal_doc_kind", [
+  "FACTURA",
+  "REMISION",
+  "NOTA_CREDITO",
+]);
+
+export const fiscalDocOriginEnum = pgEnum("fiscal_doc_origin", [
+  "FREE",
+  "QUOTE",
+  "DIAGNOSTIC",
+  "WORK_ORDER",
+  "SALE",
+  "INTERCOMPANY",
+]);
+
+export const fiscalDocStatusEnum = pgEnum("fiscal_doc_status", [
+  "SOLICITUD_PENDIENTE",
+  "PENDIENTE_EMISION",
+  "EMITIDA",
+  "ERROR_FISCAL",
+  "CANCELACION_SOLICITADA",
+  "CANCELADA",
+]);
+
+export const arStatusEnum = pgEnum("ar_status", [
+  "ABIERTA",
+  "PARCIAL",
+  "SALDADA",
+]);
+
+export const apStatusEnum = pgEnum("ap_status", [
+  "ABIERTA",
+  "PARCIAL",
+  "SALDADA",
+]);
+
+export const paymentStatusEnum = pgEnum("payment_status", [
+  "PENDIENTE_VALIDACION",
+  "VALIDADO",
+]);
+
+export const paymentDestinationEnum = pgEnum("payment_destination", [
+  "BANCO",
+  "EFECTIVO",
+  "TARJETA",
+]);
+
+export const fiscalDocuments = pgTable(
+  "fiscal_documents",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    companyId: uuid("company_id")
+      .notNull()
+      .references(() => companies.id, { onDelete: "cascade" }),
+    folioNumber: integer("folio_number").notNull(),
+    docKind: fiscalDocKindEnum("doc_kind").notNull(),
+    docOrigin: fiscalDocOriginEnum("doc_origin").notNull(),
+    status: fiscalDocStatusEnum("status")
+      .default("SOLICITUD_PENDIENTE")
+      .notNull(),
+    clientId: uuid("client_id")
+      .notNull()
+      .references(() => clients.id),
+    quoteId: uuid("quote_id").references(() => quotes.id),
+    diagnosticId: uuid("diagnostic_id").references(() => diagnostics.id),
+    workOrderId: uuid("work_order_id").references(() => workOrders.id),
+    saleId: uuid("sale_id").references(() => equipmentSales.id),
+    motorId: uuid("motor_id").references(() => motors.id),
+    commercialReference: text("commercial_reference"),
+    taxLegalNameSnapshot: text("tax_legal_name_snapshot"),
+    taxRfcSnapshot: text("tax_rfc_snapshot"),
+    taxRegimeSnapshot: text("tax_regime_snapshot"),
+    taxZipSnapshot: text("tax_zip_snapshot"),
+    subtotalMxn: integer("subtotal_mxn").notNull(),
+    discountMxn: integer("discount_mxn").default(0).notNull(),
+    ivaMxn: integer("iva_mxn").notNull(),
+    totalMxn: integer("total_mxn").notNull(),
+    creditDays: integer("credit_days"),
+    facturapiInvoiceId: text("facturapi_invoice_id"),
+    facturapiUuid: text("facturapi_uuid"),
+    idempotencyKey: text("idempotency_key").notNull(),
+    lastFiscalError: text("last_fiscal_error"),
+    fiscalRetryCount: integer("fiscal_retry_count").default(0).notNull(),
+    linkedMirrorDocumentId: uuid("linked_mirror_document_id"),
+    cancellationApprovedByUserId: uuid("cancellation_approved_by_user_id").references(
+      () => users.id,
+    ),
+    requestedByUserId: uuid("requested_by_user_id")
+      .notNull()
+      .references(() => users.id),
+    issuedByUserId: uuid("issued_by_user_id").references(() => users.id),
+    issuedAt: timestamp("issued_at", { withTimezone: true }),
+    createdByActorUserId: uuid("created_by_actor_user_id")
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("fiscal_documents_company_folio_unique").on(
+      t.companyId,
+      t.folioNumber,
+      t.docKind,
+    ),
+    uniqueIndex("fiscal_documents_idempotency_unique").on(t.idempotencyKey),
+  ],
+);
+
+export const fiscalDocumentLines = pgTable("fiscal_document_lines", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  fiscalDocumentId: uuid("fiscal_document_id")
+    .notNull()
+    .references(() => fiscalDocuments.id, { onDelete: "cascade" }),
+  sortOrder: integer("sort_order").default(0).notNull(),
+  concept: text("concept").notNull(),
+  quantity: integer("quantity").default(1).notNull(),
+  unitPriceMxn: integer("unit_price_mxn").notNull(),
+});
+
+export const accountsReceivable = pgTable("accounts_receivable", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  companyId: uuid("company_id")
+    .notNull()
+    .references(() => companies.id, { onDelete: "cascade" }),
+  clientId: uuid("client_id")
+    .notNull()
+    .references(() => clients.id),
+  fiscalDocumentId: uuid("fiscal_document_id")
+    .notNull()
+    .references(() => fiscalDocuments.id),
+  originalMxn: integer("original_mxn").notNull(),
+  balanceMxn: integer("balance_mxn").notNull(),
+  dueDate: timestamp("due_date", { withTimezone: true }),
+  status: arStatusEnum("status").default("ABIERTA").notNull(),
+  linkedApEntryId: uuid("linked_ap_entry_id"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const accountsPayable = pgTable("accounts_payable", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  companyId: uuid("company_id")
+    .notNull()
+    .references(() => companies.id, { onDelete: "cascade" }),
+  supplierId: uuid("supplier_id")
+    .notNull()
+    .references(() => suppliers.id),
+  fiscalDocumentId: uuid("fiscal_document_id").references(() => fiscalDocuments.id),
+  motorId: uuid("motor_id").references(() => motors.id),
+  originalMxn: integer("original_mxn").notNull(),
+  balanceMxn: integer("balance_mxn").notNull(),
+  dueDate: timestamp("due_date", { withTimezone: true }),
+  status: apStatusEnum("status").default("ABIERTA").notNull(),
+  linkedArEntryId: uuid("linked_ar_entry_id"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const payments = pgTable(
+  "payments",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    companyId: uuid("company_id")
+      .notNull()
+      .references(() => companies.id, { onDelete: "cascade" }),
+    folioNumber: integer("folio_number").notNull(),
+    clientId: uuid("client_id").references(() => clients.id),
+    supplierId: uuid("supplier_id").references(() => suppliers.id),
+    isIntercompany: boolean("is_intercompany").default(false).notNull(),
+    amountMxn: integer("amount_mxn").notNull(),
+    status: paymentStatusEnum("status")
+      .default("PENDIENTE_VALIDACION")
+      .notNull(),
+    destination: paymentDestinationEnum("destination").notNull(),
+    receiptReference: text("receipt_reference").notNull(),
+    receivedByVendorUserId: uuid("received_by_vendor_user_id").references(
+      () => users.id,
+    ),
+    validatedByUserId: uuid("validated_by_user_id").references(() => users.id),
+    validatedAt: timestamp("validated_at", { withTimezone: true }),
+    linkedMirrorPaymentId: uuid("linked_mirror_payment_id"),
+    createdByActorUserId: uuid("created_by_actor_user_id")
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("payments_company_folio_unique").on(
+      t.companyId,
+      t.folioNumber,
+    ),
+  ],
+);
+
+export const paymentAllocations = pgTable("payment_allocations", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  paymentId: uuid("payment_id")
+    .notNull()
+    .references(() => payments.id, { onDelete: "cascade" }),
+  arEntryId: uuid("ar_entry_id").references(() => accountsReceivable.id),
+  apEntryId: uuid("ap_entry_id").references(() => accountsPayable.id),
+  amountMxn: integer("amount_mxn").notNull(),
+});
+
+export const collectionLogs = pgTable("collection_logs", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  companyId: uuid("company_id")
+    .notNull()
+    .references(() => companies.id, { onDelete: "cascade" }),
+  arEntryId: uuid("ar_entry_id")
+    .notNull()
+    .references(() => accountsReceivable.id, { onDelete: "cascade" }),
+  authorUserId: uuid("author_user_id")
+    .notNull()
+    .references(() => users.id),
+  note: text("note").notNull(),
+  promiseDate: timestamp("promise_date", { withTimezone: true }),
+  nextFollowUpAt: timestamp("next_follow_up_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
 export type UserRole = (typeof userRoleEnum.enumValues)[number];
 export type IntegrationProvider =
   (typeof integrationProviderEnum.enumValues)[number];

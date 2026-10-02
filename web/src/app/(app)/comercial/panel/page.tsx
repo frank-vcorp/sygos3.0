@@ -92,12 +92,34 @@ export default async function PanelVentasPage() {
 
         <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="font-medium">Facturación pendiente</h2>
-          <p className="mt-2 text-sm text-slate-500">{panel.phase5Note}</p>
+          <ul className="mt-3 space-y-2 text-sm">
+            {panel.billingPending.map((b, i) => (
+              <li key={i}>
+                <Link href={b.href} className="text-sygos-teal hover:underline">
+                  {b.label}
+                </Link>
+              </li>
+            ))}
+            {panel.billingPending.length === 0 && (
+              <li className="text-slate-500">Sin facturación pendiente.</li>
+            )}
+          </ul>
         </section>
 
         <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="font-medium">Cobranza</h2>
-          <p className="mt-2 text-sm text-slate-500">{panel.phase5Note}</p>
+          <ul className="mt-3 space-y-2 text-sm">
+            {panel.collections.map((c, i) => (
+              <li key={i}>
+                <Link href={c.href} className="text-sygos-teal hover:underline">
+                  {c.label}
+                </Link>
+              </li>
+            ))}
+            {panel.collections.length === 0 && (
+              <li className="text-slate-500">Sin saldos abiertos en tu cartera.</li>
+            )}
+          </ul>
         </section>
       </div>
 

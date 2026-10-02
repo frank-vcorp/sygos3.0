@@ -22,6 +22,16 @@ export function formatSaleFolio(n: number): string {
   return `VTA-${n}`;
 }
 
+export function formatFiscalFolio(kind: string, n: number): string {
+  const prefix =
+    kind === "REMISION" ? "REM" : kind === "NOTA_CREDITO" ? "NC" : "FAC";
+  return `${prefix}-${n}`;
+}
+
+export function formatPaymentFolio(n: number): string {
+  return `PAG-${n}`;
+}
+
 /** Secuencia MOT global compartida SYSTRON ↔ Servomotores. */
 export async function nextGlobalMotFolio(): Promise<number> {
   const db = getDb();

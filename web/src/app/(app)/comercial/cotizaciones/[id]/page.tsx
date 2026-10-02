@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { QuoteBillingRequest } from "@/components/billing/billing-forms";
 import { QuoteActions } from "@/components/commercial/commercial-forms";
+import { canRequestFiscalDocument } from "@/server/rbac/billing";
+import type { CompanySlug } from "@/lib/company";
 import { formatMxn } from "@/server/commercial/money";
 import { getQuoteDetail } from "@/server/commercial/quotes";
 import { getAuthContext } from "@/server/auth/session";
@@ -108,6 +111,19 @@ export default async function CotizacionDetallePage({ params }: Props) {
           <dd className="font-semibold">{formatMxn(q.totalMxn)}</dd>
         </dl>
       </section>
+
+      {["AUTORIZADA", "AUTORIZADA_PENDIENTE_INGRESO"].includes(q.status) &&
+        canRequestFiscalDocument(
+          auth.effective.role,
+          auth.activeCompany.slug as CompanySlug,
+        ) && (
+          <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <h2 className="text-sm font-medium">Facturación / remisión</h2>
+            <div className="mt-2">
+              <QuoteBillingRequest quoteId={id} />
+            </div>
+          </section>
+        )}
 
       <QuoteActions
         quoteId={id}

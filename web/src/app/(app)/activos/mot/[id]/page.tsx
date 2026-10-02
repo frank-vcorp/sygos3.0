@@ -7,7 +7,10 @@ import { resolveCompanyIds } from "@/server/assets/context";
 import { getMotorDetail } from "@/server/assets/motors";
 import { listBitacoraForMotorReadonly } from "@/server/ops/diagnostics";
 import { getAuthContext } from "@/server/auth/session";
+import { MotIntercompanyInvoiceButton } from "@/components/billing/mot-intercompany-invoice-button";
 import { MotBaseQuoteButton } from "@/components/commercial/mot-base-quote-button";
+import { getMotIntercompanySubtotalHint } from "@/server/billing/fiscal-documents";
+import { canEmitFiscalDocument } from "@/server/rbac/billing";
 import { canManageQuotePricing } from "@/server/rbac/commercial";
 import { canOperateServomotoresCustody, canSeeMotors } from "@/server/rbac/assets";
 
@@ -33,6 +36,10 @@ export default async function MotDetailPage({ params }: Props) {
   });
 
   const canMove = canOperateServomotoresCustody(auth.effective.role, slug);
+  const intercompanySubtotal =
+    slug === "SERVOMOTORES" ?
+      await getMotIntercompanySubtotalHint(id)
+    : null;
   const mirroredBitacora =
     slug === "SYSTRON" ? await listBitacoraForMotorReadonly(id) : [];
 
@@ -51,11 +58,21 @@ export default async function MotDetailPage({ params }: Props) {
           {detail.motor.servomotoresIntakeStatus}
         </p>
       </div>
-      {slug === "SERVOMOTORES" &&
-        detail.motor.origin === "SYSTRON" &&
-        canManageQuotePricing(auth.effective.role) && (
-          <MotBaseQuoteButton motorId={id} />
-        )}
+      <div className="flex flex-wrap gap-2">
+        {slug === "SERVOMOTORES" &&
+          detail.motor.origin === "SYSTRON" &&
+          canManageQuotePricing(auth.effective.role) && (
+            <MotBaseQuoteButton motorId={id} />
+          )}
+        {slug === "SERVOMOTORES" &&
+          detail.motor.origin === "SYSTRON" &&
+          canEmitFiscalDocument(auth.effective.role) && (
+            <MotIntercompanyInvoiceButton
+              motorId={id}
+              defaultSubtotalMxn={intercompanySubtotal}
+            />
+          )}
+      </div>
       {canMove && slug === "SERVOMOTORES" && (
         <MovementActions
           entityKind="motor"

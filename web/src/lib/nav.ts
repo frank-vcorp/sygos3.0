@@ -44,6 +44,10 @@ export const appNavSections: NavSection[] = [
   {
     title: "Administración",
     items: [
+      { label: "Facturación", href: "/administracion/facturacion" },
+      { label: "Pagos", href: "/administracion/pagos" },
+      { label: "Cobranza (CxC)", href: "/administracion/cobranza" },
+      { label: "CxP intercompañía", href: "/administracion/cxp" },
       { label: "Finanzas", href: "/inicio" },
       { label: "Capital humano", href: "/inicio" },
     ],
