@@ -17,8 +17,31 @@ export { roleLabel } from "@/lib/role-labels";
 /** Menú Fase 1 — ampliar por rol en iteraciones */
 export function canSeeNavSection(
   role: UserRole,
-  section: "comercial" | "activos" | "operacion" | "administracion" | "config",
+  section:
+    | "comercial"
+    | "activos"
+    | "operacion"
+    | "administracion"
+    | "capital-humano"
+    | "paneles"
+    | "config",
 ): boolean {
+  if (section === "capital-humano") {
+    if (isSuperAdmin(role) || role === "CEO" || role === "ADMINISTRADOR") {
+      return true;
+    }
+    if (role === "COORDINACION_ADMINISTRACION") return true;
+    if (role === "KIOSCO") return false;
+    return true;
+  }
+  if (section === "paneles") {
+    if (isSuperAdmin(role) || role === "CEO" || role === "ADMINISTRADOR") {
+      return true;
+    }
+    if (role === "COORDINACION_ADMINISTRACION") return true;
+    if (role === "GERENTE_OPERATIVO_SERVOMOTORES") return true;
+    return false;
+  }
   if (isSuperAdmin(role) || role === "CEO" || role === "COORDINACION_ADMINISTRACION") {
     return true;
   }

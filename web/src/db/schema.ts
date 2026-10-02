@@ -62,6 +62,7 @@ export const companySettings = pgTable("company_settings", {
   servomotoresInventoryEnabled: boolean("servomotores_inventory_enabled")
     .default(false)
     .notNull(),
+  testModeEnabled: boolean("test_mode_enabled").default(false).notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
@@ -1510,6 +1511,209 @@ export const financialMovements = pgTable(
     ),
   ],
 );
+
+export const employeeHireTypeEnum = pgEnum("employee_hire_type", [
+  "NUEVO",
+  "MIGRADO",
+]);
+
+export const employeeStatusEnum = pgEnum("employee_status", [
+  "ACTIVO",
+  "BAJA",
+]);
+
+export const attendancePunchTypeEnum = pgEnum("attendance_punch_type", [
+  "ENTRADA",
+  "SALIDA",
+]);
+
+export const hrRequestStatusEnum = pgEnum("hr_request_status", [
+  "PENDIENTE",
+  "PENDIENTE_JEFE",
+  "PENDIENTE_CEO",
+  "AUTORIZADA",
+  "RECHAZADA",
+  "PAGADA",
+]);
+
+export const overtimeRateEnum = pgEnum("overtime_rate", ["DOBLE", "TRIPLE"]);
+
+export const payrollRunStatusEnum = pgEnum("payroll_run_status", [
+  "BORRADOR",
+  "AUTORIZADA",
+  "PAGADA",
+]);
+
+export const commissionStatusEnum = pgEnum("commission_status", [
+  "DEVENGADA",
+  "PAGADA",
+]);
+
+export const employees = pgTable(
+  "employees",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    companyId: uuid("company_id")
+      .notNull()
+      .references(() => companies.id, { onDelete: "cascade" }),
+    userId: uuid("user_id").references(() => users.id),
+    legalName: text("legal_name").notNull(),
+    hireType: employeeHireTypeEnum("hire_type").default("NUEVO").notNull(),
+    hireDate: timestamp("hire_date", { withTimezone: true }).notNull(),
+    status: employeeStatusEnum("status").default("ACTIVO").notNull(),
+    managerEmployeeId: uuid("manager_employee_id"),
+    dailySalaryStampedMxn: integer("daily_salary_stamped_mxn").default(0).notNull(),
+    dailySalaryCashMxn: integer("daily_salary_cash_mxn").default(0).notNull(),
+    vacationBalanceDays: integer("vacation_balance_days").default(0).notNull(),
+    kioskEnabled: boolean("kiosk_enabled").default(true).notNull(),
+    attendanceExempt: boolean("attendance_exempt").default(false).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [uniqueIndex("employees_company_user_unique").on(t.companyId, t.userId)],
+);
+
+export const attendancePunches = pgTable("attendance_punches", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  companyId: uuid("company_id")
+    .notNull()
+    .references(() => companies.id, { onDelete: "cascade" }),
+  employeeId: uuid("employee_id")
+    .notNull()
+    .references(() => employees.id, { onDelete: "cascade" }),
+  punchType: attendancePunchTypeEnum("punch_type").notNull(),
+  punchedAt: timestamp("punched_at", { withTimezone: true }).defaultNow().notNull(),
+  source: text("source").default("KIOSCO").notNull(),
+});
+
+export const vacationRequests = pgTable("vacation_requests", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  companyId: uuid("company_id")
+    .notNull()
+    .references(() => companies.id, { onDelete: "cascade" }),
+  employeeId: uuid("employee_id")
+    .notNull()
+    .references(() => employees.id, { onDelete: "cascade" }),
+  startDate: timestamp("start_date", { withTimezone: true }).notNull(),
+  endDate: timestamp("end_date", { withTimezone: true }).notNull(),
+  weekdayDays: integer("weekday_days").notNull(),
+  status: hrRequestStatusEnum("status").default("PENDIENTE").notNull(),
+  requestedByUserId: uuid("requested_by_user_id")
+    .notNull()
+    .references(() => users.id),
+  resolvedByUserId: uuid("resolved_by_user_id").references(() => users.id),
+  note: text("note"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const overtimeRequests = pgTable("overtime_requests", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  companyId: uuid("company_id")
+    .notNull()
+    .references(() => companies.id, { onDelete: "cascade" }),
+  employeeId: uuid("employee_id")
+    .notNull()
+    .references(() => employees.id, { onDelete: "cascade" }),
+  workDate: timestamp("work_date", { withTimezone: true }).notNull(),
+  hours: integer("hours").notNull(),
+  rateKind: overtimeRateEnum("rate_kind").notNull(),
+  status: hrRequestStatusEnum("status").default("PENDIENTE_JEFE").notNull(),
+  requestedByUserId: uuid("requested_by_user_id")
+    .notNull()
+    .references(() => users.id),
+  bossApprovedByUserId: uuid("boss_approved_by_user_id").references(
+    () => users.id,
+  ),
+  ceoApprovedByUserId: uuid("ceo_approved_by_user_id").references(() => users.id),
+  amountMxn: integer("amount_mxn"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const payrollRuns = pgTable(
+  "payroll_runs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    companyId: uuid("company_id")
+      .notNull()
+      .references(() => companies.id, { onDelete: "cascade" }),
+    weekKey: text("week_key").notNull(),
+    folioNumber: integer("folio_number").notNull(),
+    status: payrollRunStatusEnum("status").default("BORRADOR").notNull(),
+    authorizedByUserId: uuid("authorized_by_user_id").references(() => users.id),
+    authorizedAt: timestamp("authorized_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("payroll_runs_company_week_unique").on(t.companyId, t.weekKey),
+    uniqueIndex("payroll_runs_company_folio_unique").on(
+      t.companyId,
+      t.folioNumber,
+    ),
+  ],
+);
+
+export const payrollLines = pgTable("payroll_lines", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  payrollRunId: uuid("payroll_run_id")
+    .notNull()
+    .references(() => payrollRuns.id, { onDelete: "cascade" }),
+  employeeId: uuid("employee_id")
+    .notNull()
+    .references(() => employees.id),
+  concept: text("concept").notNull(),
+  amountMxn: integer("amount_mxn").notNull(),
+  vacationRequestId: uuid("vacation_request_id").references(
+    () => vacationRequests.id,
+  ),
+  overtimeRequestId: uuid("overtime_request_id").references(
+    () => overtimeRequests.id,
+  ),
+});
+
+export const commissionAccruals = pgTable("commission_accruals", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  companyId: uuid("company_id")
+    .notNull()
+    .references(() => companies.id, { onDelete: "cascade" }),
+  vendorUserId: uuid("vendor_user_id")
+    .notNull()
+    .references(() => users.id),
+  quoteId: uuid("quote_id").references(() => quotes.id),
+  periodKey: text("period_key").notNull(),
+  amountMxn: integer("amount_mxn").notNull(),
+  status: commissionStatusEnum("status").default("DEVENGADA").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const productionEntries = pgTable("production_entries", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  companyId: uuid("company_id")
+    .notNull()
+    .references(() => companies.id, { onDelete: "cascade" }),
+  workOrderId: uuid("work_order_id")
+    .notNull()
+    .references(() => workOrders.id),
+  technicianUserId: uuid("technician_user_id")
+    .notNull()
+    .references(() => users.id),
+  hoursTenths: integer("hours_tenths").notNull(),
+  note: text("note"),
+  recordedAt: timestamp("recorded_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
 
 export const collectionLogs = pgTable("collection_logs", {
   id: uuid("id").defaultRandom().primaryKey(),

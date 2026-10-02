@@ -5,6 +5,7 @@ import { listDirectPurchases } from "@/server/purchases/direct";
 import { listCeoPendingPurchaseOrders } from "@/server/purchases/orders";
 import { getAuthContext } from "@/server/auth/session";
 import { canAuthorizePurchaseOrder, canProcessPurchases } from "@/server/rbac/purchases";
+import { canSeeCeoPanel, canSeeCoordinationPanel, canSeeGerenteSmPanel } from "@/server/rbac/panels";
 import { isSuperAdmin } from "@/server/rbac/roles";
 
 export const dynamic = "force-dynamic";
@@ -26,16 +27,29 @@ export default async function InicioPage() {
     (r) => r.purchase.status === "PENDIENTE_VALIDAR",
   );
 
-  const hasBlocks = ceoOrders.length > 0 || pendingDirect.length > 0;
-
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <h1 className="text-2xl font-semibold">Inicio</h1>
-      {!hasBlocks && (
-        <p className="text-sm text-slate-500">
-          Sin pendientes ejecutivos en esta empresa. Usa el menú lateral para operar.
-        </p>
-      )}
+      <div className="flex flex-wrap gap-3 text-sm">
+        {canSeeCeoPanel(auth.effective.role) && (
+          <Link href="/paneles/ceo" className="text-sygos-teal">
+            Panel CEO →
+          </Link>
+        )}
+        {canSeeCoordinationPanel(auth.effective.role) && (
+          <Link href="/paneles/coordinacion" className="text-sygos-teal">
+            Panel Coordinación →
+          </Link>
+        )}
+        {canSeeGerenteSmPanel(auth.effective.role) && (
+          <Link href="/paneles/gerente-sm" className="text-sygos-teal">
+            Panel Gerente SM →
+          </Link>
+        )}
+        <Link href="/reportes" className="text-sygos-teal">
+          Reportes →
+        </Link>
+      </div>
       {ceoOrders.length > 0 && (
         <section className="rounded-xl border bg-white p-4 shadow-sm">
           <h2 className="text-sm font-semibold">O.C. pendientes de autorización (CEO)</h2>
@@ -64,6 +78,11 @@ export default async function InicioPage() {
             ))}
           </ul>
         </section>
+      )}
+      {ceoOrders.length === 0 && pendingDirect.length === 0 && (
+        <p className="text-sm text-slate-500">
+          Sin pendientes ejecutivos urgentes. Usa el menú lateral para operar.
+        </p>
       )}
     </div>
   );

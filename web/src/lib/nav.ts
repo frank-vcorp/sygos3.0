@@ -40,6 +40,25 @@ export const appNavSections: NavSection[] = [
       { label: "Compras directas", href: "/operacion/compras" },
       { label: "Órdenes de compra", href: "/operacion/oc" },
       { label: "Proveedores", href: "/operacion/proveedores" },
+      { label: "Producción técnica", href: "/operacion/produccion" },
+    ],
+  },
+  {
+    title: "Capital humano",
+    items: [
+      { label: "Colaboradores", href: "/capital-humano/colaboradores" },
+      { label: "Nómina", href: "/capital-humano/nomina" },
+      { label: "Vacaciones", href: "/capital-humano/vacaciones" },
+      { label: "Comisiones", href: "/capital-humano/comisiones" },
+      { label: "Mis horas extra", href: "/capital-humano/mis-horas-extra" },
+    ],
+  },
+  {
+    title: "Paneles",
+    items: [
+      { label: "Panel CEO", href: "/paneles/ceo" },
+      { label: "Panel Coordinación", href: "/paneles/coordinacion" },
+      { label: "Panel Gerente SM", href: "/paneles/gerente-sm" },
     ],
   },
   {
@@ -50,7 +69,7 @@ export const appNavSections: NavSection[] = [
       { label: "Cobranza (CxC)", href: "/administracion/cobranza" },
       { label: "CxP", href: "/administracion/cxp" },
       { label: "Finanzas", href: "/administracion/finanzas" },
-      { label: "Capital humano", href: "/inicio" },
+      { label: "Reportes", href: "/reportes" },
     ],
   },
 ];

@@ -17,10 +17,20 @@ type AppSidebarProps = {
   activePath?: string;
 };
 
-const sectionKey: Record<string, "comercial" | "activos" | "operacion" | "administracion"> = {
+const sectionKey: Record<
+  string,
+  | "comercial"
+  | "activos"
+  | "operacion"
+  | "administracion"
+  | "capital-humano"
+  | "paneles"
+> = {
   Comercial: "comercial",
   Activos: "activos",
   Operación: "operacion",
+  "Capital humano": "capital-humano",
+  Paneles: "paneles",
   Administración: "administracion",
 };
 

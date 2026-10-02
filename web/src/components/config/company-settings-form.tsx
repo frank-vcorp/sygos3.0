@@ -48,6 +48,7 @@ export function CompanySettingsForm({
         companySlug === "SERVOMOTORES" && canEditCapabilities
           ? fd.get("servomotoresInventoryEnabled") === "on"
           : undefined,
+      testModeEnabled: fd.get("testModeEnabled") === "on",
     };
     const res = await fetch("/api/config/company-settings", {
       method: "PATCH",
@@ -195,6 +196,20 @@ export function CompanySettingsForm({
           </label>
         </fieldset>
       )}
+
+      <fieldset className="rounded-xl border border-amber-200 bg-amber-50/50 p-6">
+        <legend className="px-1 text-sm font-semibold text-slate-900">
+          Modo de pruebas (Fase 9)
+        </legend>
+        <label className="mt-2 flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            name="testModeEnabled"
+            defaultChecked={settings.testModeEnabled}
+          />
+          Simular emisión fiscal (Facturapi no se llama en producción de timbrado)
+        </label>
+      </fieldset>
 
       <button
         type="submit"

@@ -44,6 +44,10 @@ export function formatMovementFolio(n: number): string {
   return `MOV-${n}`;
 }
 
+export function formatPayrollFolio(n: number): string {
+  return `NOM-${n}`;
+}
+
 /** Secuencia MOT global compartida SYSTRON ↔ Servomotores. */
 export async function nextGlobalMotFolio(): Promise<number> {
   const db = getDb();

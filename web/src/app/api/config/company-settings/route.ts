@@ -36,6 +36,7 @@ const patchSchema = z.object({
   directPurchaseMonthlyLimitMxn: z.number().int().min(0).optional(),
   directPurchaseIndividualLimitMxn: z.number().int().min(0).optional(),
   servomotoresInventoryEnabled: z.boolean().optional(),
+  testModeEnabled: z.boolean().optional(),
 });
 
 export async function PATCH(request: Request) {

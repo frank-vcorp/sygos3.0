@@ -15,6 +15,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "SYGOS 3.0",
   description: "Plataforma operativa SYSTRON y Servomotores",
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({

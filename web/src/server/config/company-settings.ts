@@ -46,6 +46,7 @@ export async function updateCompanySettings(
     directPurchaseMonthlyLimitMxn: number;
     directPurchaseIndividualLimitMxn: number;
     servomotoresInventoryEnabled: boolean;
+    testModeEnabled: boolean;
   }>,
 ) {
   const db = getDb();

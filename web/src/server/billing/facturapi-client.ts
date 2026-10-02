@@ -36,6 +36,14 @@ export async function emitInvoiceWithFacturapi(params: {
   items: { description: string; quantity: number; product: { price: number } }[];
   totalMxn: number;
 }): Promise<FacturapiEmitResult> {
+  const { isTestModeEnabled } = await import("@/server/config/test-mode");
+  if (await isTestModeEnabled(params.companyId)) {
+    return {
+      invoiceId: `test-${params.idempotencyKey.slice(0, 8)}`,
+      uuid: `00000000-0000-4000-8000-${params.idempotencyKey.replace(/-/g, "").slice(0, 12)}`,
+      simulated: true,
+    };
+  }
   const apiKey = await getFacturapiApiKey(params.companyId);
   if (!apiKey) {
     return {
