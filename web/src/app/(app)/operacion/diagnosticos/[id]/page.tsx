@@ -13,7 +13,11 @@ import { listBitacora } from "@/server/ops/bitacora";
 import { getDiagnosticDetail } from "@/server/ops/diagnostics";
 import { listSuppliers } from "@/server/masters/suppliers";
 import { getAuthContext } from "@/server/auth/session";
-import { canSeeTechnicalOps } from "@/server/rbac/ops";
+import {
+  canExecuteDiagnostic,
+  canSeeTechnicalOps,
+  canValidateDiagnostics,
+} from "@/server/rbac/ops";
 import { isSuperAdmin } from "@/server/rbac/roles";
 import { DetailSection, RelationLinks } from "@/components/discovery/detail-section";
 import { JourneyPanel } from "@/components/journey/journey-panel";
@@ -122,6 +126,11 @@ export default async function DiagnosticoDetallePage({ params }: Props) {
             </Link>
           </p>
         )}
+        {detail.diagnostic.validationReturnReason && (
+          <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-950">
+            Devolución gerente: {detail.diagnostic.validationReturnReason}
+          </p>
+        )}
         {detail.diagnostic.warrantyDecision && (
           <p className="text-sm text-amber-900">
             Decisión técnica: {detail.diagnostic.warrantyDecision}
@@ -167,7 +176,8 @@ export default async function DiagnosticoDetallePage({ params }: Props) {
         diagnosticId={id}
         status={detail.diagnostic.status}
         readOnly={readOnly}
-        equiId={detail.attention?.equiId}
+        canValidate={canValidateDiagnostics(auth.effective.role, slug)}
+        canExecute={canExecuteDiagnostic(auth.effective.role, slug)}
       />
       {!readOnly && (
         <ExternalServicePanel

@@ -1,14 +1,17 @@
 import type { JourneyHint } from "@/server/journey/types";
 
 export function getVacationJourneyHint(status: string): JourneyHint | null {
-  if (status === "PENDIENTE_CEO") {
+  if (status === "PENDIENTE") {
     return {
       message: "CEO/Administrador: autorizar o rechazar vacaciones.",
-      href: "/paneles/ceo",
+      href: "/capital-humano/vacaciones?vista=pendientes",
     };
   }
   if (status === "AUTORIZADA") {
     return { message: "Vacación autorizada — reflejada en asistencia/nómina.", href: null };
+  }
+  if (status === "RECHAZADA") {
+    return { message: "Solicitud rechazada — solo consulta histórica.", href: null };
   }
   return {
     message: "Jefe directo registra solicitud de vacaciones.",
@@ -38,24 +41,30 @@ export function getOvertimeJourneyHint(status: string): JourneyHint | null {
   };
 }
 
-export function getPayrollRunJourneyHint(status: string): JourneyHint | null {
-  if (status === "BORRADOR") {
+export function getPayrollRunJourneyHint(params: {
+  status: string;
+  fiscalStatus: string;
+}): JourneyHint | null {
+  if (params.status === "BORRADOR") {
     return {
-      message: "RH/Coordinación: revisar preliminar y enviar a autorización.",
-      href: "/paneles/coordinacion",
-    };
-  }
-  if (status === "PENDIENTE_AUTORIZACION") {
-    return {
-      message: "CEO/Administrador: autorizar nómina.",
-      href: "/paneles/ceo",
-    };
-  }
-  if (status === "AUTORIZADA") {
-    return {
-      message: "Nómina autorizada — timbrado/recibos.",
+      message: "RH/Coordinación: revisar borrador; CEO autoriza (no reabrir tras autorizada).",
       href: "/capital-humano/nomina",
     };
+  }
+  if (params.status === "AUTORIZADA" && params.fiscalStatus === "ERROR") {
+    return {
+      message: "Timbrado falló — reintentar sin duplicar corrida.",
+      href: "/capital-humano/nomina",
+    };
+  }
+  if (params.status === "AUTORIZADA") {
+    return {
+      message: "Nómina autorizada — recibos/timbrado según composición del colaborador.",
+      href: "/capital-humano/nomina",
+    };
+  }
+  if (params.status === "PAGADA") {
+    return { message: "Nómina pagada/cerrada.", href: null };
   }
   return null;
 }

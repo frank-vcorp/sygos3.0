@@ -1,8 +1,10 @@
-# Discovery §12 — Checklist de cierre (100 % funcional)
+# Discovery §12 — Checklist de cierre
 
 Referencia: `SYGOS_3.0_DISCOVERY_FUNCIONAL_VALIDADO.md` §12.1–12.6.
 
-**Leyenda:** ✅ Implementado en código · 🧪 Validar en UAT (marcar en `/configuracion/cierre-e2e`)
+**Leyenda:** ✅ Lógica/handoffs en código · 🧪 **Sign-off UAT obligatorio** (recorridos R-01…R-22 en `/configuracion/uat-recorridos` + guion en `SYGOS_3.0_PLAN_VALIDACION_FINAL.md`)
+
+> **100 % discovery funcional** = todos los recorridos UAT pasan con rol correcto, estados, handoffs y relaciones navegables. Las bandejas/UX solas no cuentan como cierre.
 
 ## §12.1 Completitud de módulo
 
@@ -99,4 +101,4 @@ Dependencias respetadas en servicios · Plan en [`SYGOS_3.0_PLAN_VALIDACION_FINA
 
 **Integraciones externas:** configuración por empresa (Facturapi, SendGrid, WhatsApp). Comportamiento sin credenciales definido en política fiscal (`external-policy`, staging UAT).
 
-**Sign-off:** Recorrer ítems 🧪 en https://sygos3-0.systronia.com con roles reales y marcar `/configuracion/cierre-e2e`.
+**Sign-off:** Ejecutar R-01…R-22 en staging (Ver como `qa.*`) → marcar progreso en `/configuracion/uat-recorridos` → registrar folios en sección 6 del plan de validación.

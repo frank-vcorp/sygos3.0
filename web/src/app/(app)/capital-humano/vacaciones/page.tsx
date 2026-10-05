@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { VacationListTabs } from "@/components/hr/vacation-list-tabs";
+import { JourneyPanel } from "@/components/journey/journey-panel";
 import { ListShell } from "@/components/masters/list-shell";
+import { getVacationJourneyHint } from "@/server/journey/hr-handoffs";
 import { vacationStatusLabel } from "@/lib/discovery/labels/hr";
 import { HrActionButton } from "@/components/hr/hr-forms";
 import { listVacationRequests } from "@/server/hr/vacations";
@@ -22,9 +24,14 @@ export default async function VacacionesPage({ searchParams }: Props) {
   const rows = await listVacationRequests(auth.activeCompany.id, {
     pendingOnly: activeView === "pendientes",
   });
+  const pendingRow = rows.find(({ request }) => request.status === "PENDIENTE");
+  const journeyHint = pendingRow
+    ? getVacationJourneyHint("PENDIENTE")
+    : getVacationJourneyHint("AUTORIZADA");
 
   return (
     <div className="space-y-4">
+      <JourneyPanel title="Qué falta para avanzar" hint={journeyHint} />
       <VacationListTabs active={activeView} />
       <ListShell
         title="Vacaciones"

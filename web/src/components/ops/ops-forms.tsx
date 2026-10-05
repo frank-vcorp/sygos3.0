@@ -134,16 +134,19 @@ export function DiagnosticActionsPanel({
   diagnosticId,
   status,
   readOnly,
-  equiId,
+  canValidate,
+  canExecute,
 }: {
   diagnosticId: string;
   status: string;
   readOnly?: boolean;
-  equiId?: string | null;
+  canValidate: boolean;
+  canExecute: boolean;
 }) {
   const router = useRouter();
   const [message, setMessage] = useState<string | null>(null);
   const [bitacora, setBitacora] = useState("");
+  const [returnReason, setReturnReason] = useState("");
 
   async function patch(body: Record<string, unknown>) {
     setMessage(null);
@@ -187,7 +190,7 @@ export function DiagnosticActionsPanel({
     <div className="space-y-4">
       {message && <p className="text-sm text-red-700">{message}</p>}
       <div className="flex flex-wrap gap-2">
-        {status === "EN_ESPERA" && (
+        {canExecute && status === "EN_ESPERA" && (
           <button
             type="button"
             className="rounded-lg border px-3 py-2 text-sm"
@@ -196,7 +199,7 @@ export function DiagnosticActionsPanel({
             Iniciar diagnóstico
           </button>
         )}
-        {status === "EN_DIAGNOSTICO" || status === "DEVUELTO_CORRECCION" ? (
+        {canExecute && (status === "EN_DIAGNOSTICO" || status === "DEVUELTO_CORRECCION") ? (
           <>
             <button
               type="button"
@@ -212,7 +215,7 @@ export function DiagnosticActionsPanel({
             </button>
           </>
         ) : null}
-        {status === "PENDIENTE_VALIDACION_GERENTE" && (
+        {canValidate && status === "PENDIENTE_VALIDACION_GERENTE" && (
           <>
             <button
               type="button"
@@ -221,18 +224,31 @@ export function DiagnosticActionsPanel({
             >
               Validar (Gerente)
             </button>
-            <button
-              type="button"
-              className="rounded-lg border px-3 py-2 text-sm"
-              onClick={() =>
-                patch({
-                  status: "DEVUELTO_CORRECCION",
-                  validationReturnReason: "Corregir según instrucción",
-                })
-              }
-            >
-              Devolver a corrección
-            </button>
+            <div className="w-full space-y-2 border-t border-slate-100 pt-3">
+              <label className="block text-xs text-slate-600">
+                Motivo de devolución (obligatorio)
+                <textarea
+                  value={returnReason}
+                  onChange={(e) => setReturnReason(e.target.value)}
+                  rows={2}
+                  className="mt-1 w-full rounded-lg border px-3 py-2 text-sm"
+                  placeholder="Qué debe corregir el técnico…"
+                />
+              </label>
+              <button
+                type="button"
+                className="rounded-lg border px-3 py-2 text-sm"
+                disabled={returnReason.trim().length < 8}
+                onClick={() =>
+                  patch({
+                    status: "DEVUELTO_CORRECCION",
+                    validationReturnReason: returnReason.trim(),
+                  })
+                }
+              >
+                Devolver a corrección
+              </button>
+            </div>
           </>
         )}
       </div>

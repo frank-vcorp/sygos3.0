@@ -59,6 +59,15 @@ export async function PATCH(request: Request, { params }: Params) {
       if (!canValidateDiagnostics(auth.effective.role, slug)) {
         return NextResponse.json({ error: "No autorizado." }, { status: 403 });
       }
+      if (
+        body.status === "DEVUELTO_CORRECCION" &&
+        (!body.validationReturnReason || body.validationReturnReason.trim().length < 8)
+      ) {
+        return NextResponse.json(
+          { error: "Indica el motivo de devolución (mín. 8 caracteres)." },
+          { status: 400 },
+        );
+      }
     } else if (body.status === "EN_DIAGNOSTICO" || body.status === "DIAGNOSTICO_TERMINADO") {
       if (!canExecuteDiagnostic(auth.effective.role, slug)) {
         return NextResponse.json({ error: "No autorizado." }, { status: 403 });

@@ -38,6 +38,11 @@ export default async function ConfiguracionHubPage() {
       label: "Modo de pruebas",
       desc: "§11.3 — UAT sin efectos fiscales reales.",
     },
+    {
+      href: "/configuracion/uat-recorridos",
+      label: "Recorridos UAT (R-01…R-22)",
+      desc: "Sign-off discovery funcional por journeys, no solo pantallas.",
+    },
   );
 
   if (links.length === 0) redirect("/inicio");

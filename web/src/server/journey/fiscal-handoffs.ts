@@ -25,6 +25,26 @@ export function getFiscalDocumentJourneyHint(params: {
   return null;
 }
 
+export function getReceivableJourneyHint(params: {
+  balanceMxn: number;
+  isOverdue: boolean;
+  fiscalDocumentId: string;
+}): JourneyHint | null {
+  if (params.balanceMxn <= 0) {
+    return { message: "CxC saldada.", href: null };
+  }
+  if (params.isOverdue) {
+    return {
+      message: "Saldo vencido — cobranza activa y/o registrar pago validado.",
+      href: "/administracion/pagos",
+    };
+  }
+  return {
+    message: "Saldo abierto — registrar pago (vendedor) y validar (Coordinación).",
+    href: "/administracion/pagos",
+  };
+}
+
 export function getPaymentJourneyHint(params: {
   status: string;
 }): JourneyHint | null {

@@ -66,9 +66,14 @@ export default async function CierreE2EPage() {
       </Link>
       <h1 className="text-2xl font-semibold">Checklist cierre E2E (Discovery §12)</h1>
       <p className="text-sm text-slate-600">
-        Validación manual extremo a extremo. El inventario completo §12 está en{" "}
-        <code className="text-xs">web/docs/DISCOVERY-12-CHECKLIST.md</code> del
-        repositorio (100 % funcional implementado; ítems 🧪 requieren sign-off UAT aquí).
+        Validación manual extremo a extremo. Inventario técnico §12:{" "}
+        <code className="text-xs">web/docs/DISCOVERY-12-CHECKLIST.md</code>.
+        La aceptación de negocio es ejecutar los{" "}
+        <Link href="/configuracion/uat-recorridos" className="text-sygos-teal underline">
+          22 recorridos UAT
+        </Link>{" "}
+        (R-01…R-22) con roles QA — ver{" "}
+        <code className="text-xs">SYGOS_3.0_PLAN_VALIDACION_FINAL.md</code>.
       </p>
       {SECTIONS.map((section) => (
         <section key={section.title} className="rounded-xl border bg-white p-4">

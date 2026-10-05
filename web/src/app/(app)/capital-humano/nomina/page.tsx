@@ -3,7 +3,9 @@ import { redirect } from "next/navigation";
 import { ListShell } from "@/components/masters/list-shell";
 import { payrollRunStatusLabel } from "@/lib/discovery/labels/hr";
 import { HrActionButton } from "@/components/hr/hr-forms";
+import { JourneyPanel } from "@/components/journey/journey-panel";
 import { PayrollPanel } from "@/components/hr/payroll-panel";
+import { getPayrollRunJourneyHint } from "@/server/journey/hr-handoffs";
 import { formatPayrollFolio } from "@/server/masters/folios";
 import { listEmployees } from "@/server/hr/employees";
 import { getPayrollDetail, listPayrollRuns } from "@/server/hr/payroll";
@@ -28,9 +30,17 @@ export default async function NominaPage() {
   ]);
   const latest = runs[0];
   const detail = latest ? await getPayrollDetail(auth.activeCompany.id, latest.id) : null;
+  const payrollHint =
+    latest ?
+      getPayrollRunJourneyHint({
+        status: latest.status,
+        fiscalStatus: latest.fiscalStatus,
+      })
+    : null;
 
   return (
     <div className="space-y-6">
+      {payrollHint && <JourneyPanel title="Qué falta para avanzar" hint={payrollHint} />}
       <ListShell
         title="Nómina"
         description="§9.2 — borrador Coordinación/RH → autorización CEO → timbrado; no reabrir autorizada."
