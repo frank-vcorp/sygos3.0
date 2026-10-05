@@ -9,9 +9,9 @@ ERP operativo multiempresa (SYSTRON / Servomotores).
 
 | Ruta | Descripción |
 |------|-------------|
-| `web/` | Aplicación Next.js (UI + API en evolución) |
+| `web/` | Aplicación Next.js (UI + API) |
 | `Marca/` | Activos de marca |
-| `docker-compose.yml` | Postgres, Redis, app (desarrollo / referencia Coolify) |
+| `docker-compose.yml` | Postgres, Redis y app (desarrollo / despliegue de referencia) |
 
 ## Desarrollo local
 
@@ -28,16 +28,14 @@ npm run dev
 
 Abrir http://localhost:3000 → **Systronia** → cambio de contraseña obligatorio → `/inicio`.
 
+## Despliegue y UAT
+
+- Variables y Docker: [web/docs/DEPLOY.md](./web/docs/DEPLOY.md)
+- UAT sin integraciones externas: [web/docs/UAT.md](./web/docs/UAT.md)
+- Producción: [web/docs/PRODUCCION.md](./web/docs/PRODUCCION.md)
+
 ## Madurez funcional
 
-Discovery §12 (criterios de aceptación): implementación completa en código — ver [`web/docs/DISCOVERY-12-CHECKLIST.md`](web/docs/DISCOVERY-12-CHECKLIST.md) y [`SYGOS_3.0_PLAN_VALIDACION_FINAL.md`](SYGOS_3.0_PLAN_VALIDACION_FINAL.md).
+Discovery §12: [`web/docs/DISCOVERY-12-CHECKLIST.md`](web/docs/DISCOVERY-12-CHECKLIST.md) y [`SYGOS_3.0_PLAN_VALIDACION_FINAL.md`](SYGOS_3.0_PLAN_VALIDACION_FINAL.md).
 
-Sign-off operativo: recorrido UAT en staging y checklist en `/configuracion/cierre-e2e`.
-
-## Staging (Coolify)
-
-**https://sygos3-0.systronia.com** · login: `/login`
-
-Tras provisionar, configura en Coolify las variables de [web/coolify.md](./web/coolify.md) y redeploy.
-
-Próximos pasos Fase 1: maestros Clientes, Prospectos, Proveedores, folios.
+Sign-off: recorridos R-01…R-22 en `/configuracion/uat-recorridos`.

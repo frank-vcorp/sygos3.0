@@ -101,4 +101,4 @@ Dependencias respetadas en servicios · Plan en [`SYGOS_3.0_PLAN_VALIDACION_FINA
 
 **Integraciones externas:** configuración por empresa (Facturapi, SendGrid, WhatsApp). Comportamiento sin credenciales definido en política fiscal (`external-policy`, staging UAT).
 
-**Sign-off:** Ejecutar R-01…R-22 en staging (Ver como `qa.*`) → marcar progreso en `/configuracion/uat-recorridos` → registrar folios en sección 6 del plan de validación.
+**Sign-off:** Ejecutar R-01…R-22 en entorno UAT ([UAT.md](./UAT.md), Ver como `qa.*`) → marcar progreso en `/configuracion/uat-recorridos` → registrar folios en sección 6 del plan de validación.

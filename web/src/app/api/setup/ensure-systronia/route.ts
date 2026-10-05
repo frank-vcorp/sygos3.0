@@ -15,7 +15,7 @@ const bodySchema = z.object({
 });
 
 /**
- * Recuperación controlada: requiere SETUP_BOOTSTRAP_KEY en Coolify. Quitar tras usar.
+ * Recuperación controlada: requiere SETUP_BOOTSTRAP_KEY en el runtime. Quitar tras usar.
  */
 export async function POST(request: Request) {
   const expected = process.env.SETUP_BOOTSTRAP_KEY;
@@ -106,7 +106,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       ok: true,
       message:
-        "Systronia listo. Cambia la contraseña al entrar. Elimina SETUP_BOOTSTRAP_KEY en Coolify.",
+        "Systronia listo. Cambia la contraseña al entrar. Elimina SETUP_BOOTSTRAP_KEY del runtime.",
     });
   } catch {
     return NextResponse.json({ error: "Solicitud inválida." }, { status: 400 });

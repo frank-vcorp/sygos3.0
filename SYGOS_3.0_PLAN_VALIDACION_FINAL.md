@@ -2,7 +2,7 @@
 
 Fuente funcional: [SYGOS_3.0_DISCOVERY_FUNCIONAL_VALIDADO.md](./SYGOS_3.0_DISCOVERY_FUNCIONAL_VALIDADO.md)
 
-Implementación: `web/` · UAT staging: [web/docs/STAGING-UAT.md](./web/docs/STAGING-UAT.md) · Usuarios «Ver como»: usuarios `qa.*` + **Systronia** (Administrador).
+Implementación: `web/` · UAT: [web/docs/UAT.md](./web/docs/UAT.md) · Usuarios «Ver como»: usuarios `qa.*` + **Systronia** (Administrador).
 
 ---
 

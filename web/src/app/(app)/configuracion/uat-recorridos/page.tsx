@@ -24,7 +24,7 @@ export default async function UatRecorridosPage() {
           <code className="text-xs">web/src/server/journey/*</code> y APIs; el producto pasa cuando
           estos recorridos se ejecutan sin bloqueos de rol/estado. Guion detallado: repo{" "}
           <code className="text-xs">SYGOS_3.0_PLAN_VALIDACION_FINAL.md</code> · usuarios QA:{" "}
-          <code className="text-xs">web/docs/STAGING-UAT.md</code>.
+          <code className="text-xs">web/docs/UAT.md</code>.
         </p>
       </div>
       <UatRecorridosChecklist recorridos={uatRecorridos} />

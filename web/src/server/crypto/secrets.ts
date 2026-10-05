@@ -6,7 +6,7 @@ function getKey(): Buffer {
   const raw = process.env.ENCRYPTION_KEY;
   if (!raw || raw.length < 32) {
     throw new Error(
-      "ENCRYPTION_KEY debe tener al menos 32 caracteres (Coolify / .env local)",
+      "ENCRYPTION_KEY debe tener al menos 32 caracteres (.env / runtime del servidor)",
     );
   }
   return Buffer.from(raw.slice(0, 32));

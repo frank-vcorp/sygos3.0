@@ -1,16 +1,14 @@
 # Go-live producción (SYGOS 3.0)
 
-Staging actual: https://sygos3-0.systronia.com
-
 ## Checklist
 
-1. **Coolify** — Duplicar app o nuevo FQDN prod (ej. `sygos.systronia.com` o dominio cliente).
-2. **Secrets** — `DATABASE_URL`, `ENCRYPTION_KEY` (≥32 chars), quitar `ADMIN_INITIAL_PASSWORD` tras seed. **No** usar `SYGOS_INTERNAL_FISCAL` (solo staging UAT).
-3. **Integraciones** — Facturapi/SendGrid por empresa en UI (no en env del repo).
+1. **Infra** — Contenedor o VM con Postgres dedicado, TLS en el reverse proxy, dominio del cliente.
+2. **Secrets** — `DATABASE_URL`, `ENCRYPTION_KEY` (≥32 chars), quitar `ADMIN_INITIAL_PASSWORD` tras seed. **No** usar `SYGOS_INTERNAL_FISCAL` (solo UAT; ver [UAT.md](./UAT.md)).
+3. **Integraciones** — Facturapi/SendGrid por empresa en UI (no en el repo).
 4. **Modo de pruebas** — Desactivado en producción salvo ventanas controladas.
-5. **Migraciones** — El entrypoint ejecuta `npm run db:migrate` en cada deploy.
-6. **QA** — Recorrer `/configuracion/cierre-e2e` con el equipo.
-7. **Backups** — Activar backup Postgres en Coolify para la BD prod.
+5. **Migraciones** — Ejecutar `npm run db:migrate` en cada release (automático en Docker entrypoint).
+6. **QA** — Recorrer `/configuracion/uat-recorridos` y `/configuracion/cierre-e2e` en el entorno previo a prod.
+7. **Backups** — Política de backup Postgres acorde al SLA del cliente.
 
 ## Nómina fiscal
 
